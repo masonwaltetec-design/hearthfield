@@ -1016,13 +1016,20 @@ function wantMobile(){return MODE==='mobile'||(MODE!=='widget'&&MODE!=='desktop'
 function setLayout(){MOB=wantMobile();document.body.classList.toggle('mobile',MOB);if(scene){scene.cv.height=MOB?560:480;scene.big=MOB}setTab(curTab)}
 
 /* switching apps */
-function goApp(a){if(!APPINFO[a])return;APP=a;try{localStorage.setItem('hf-last-app',a)}catch(e){}
-  const u=new URL(location.href);u.searchParams.set('app',a);history.replaceState(null,'',u);
+// how = 'push' (from the caretakers screen, so Back returns there), 'none' (already in history) or replace
+function goApp(a,how){if(!APPINFO[a])return;APP=a;try{localStorage.setItem('hf-last-app',a)}catch(e){}
+  const u=new URL(location.href);u.searchParams.set('app',a);if(how==='push')history.pushState(null,'',u);else if(how!=='none')history.replaceState(null,'',u);
   document.body.className=document.body.className.replace(/\bapp-\w+/g,'').replace(/\bhub\b/,'').trim()+' app-'+a;
   $('favLink').href='icons/'+a+'-192.png';
   portrait($('appLogo'),a);portrait($('noteFace'),a);scene=new Scene($('scene'),a);if(MOB){scene.cv.height=560;scene.big=true}sel=null;
   if($('mapDlg').open)$('mapDlg').close();renderAll();setTab('home')}
 window.hfSwitch=goApp;
+// back to the caretakers screen (phone and browser only)
+const canHub=()=>MODE!=='widget'&&MODE!=='desktop'&&!window.hfDesktop;
+function goHub(){APP=null;scene=null;sel=null;document.querySelectorAll('dialog[open]').forEach(d=>d.close());
+  document.body.className=document.body.className.replace(/\bapp-\w+/g,'').trim()+' hub';$('favLink').href='icons/hub-192.png';document.title='Hearthfield';
+  hubLogo($('hubLogo'));renderAll();window.scrollTo(0,0)}
+window.addEventListener('popstate',()=>{if(!canHub())return;const a=(new URLSearchParams(location.search).get('app')||'').toLowerCase();if(APPINFO[a])goApp(a,'none');else goHub()});
 
 /* events */
 let delArm=null;
@@ -1058,7 +1065,7 @@ document.addEventListener('click',e=>{const a=e.target.closest('[data-action]');
     case'book':{const b=state.books.find(x=>x.id===a.dataset.id);if(!b)return;const nx={want:'reading',reading:'done',done:'want'}[b.status];b.status=nx;if(nx==='done'){stamp();bump(today(),1);gainXp(30);coins(b.kind==='class'?40:30);news('Wren shelved "'+b.title+'" as finished.');toast('Finished!',b.title);cheer('v2')}checkBadges();save();renderAll();break}
     case'del-book':state.books=state.books.filter(x=>x.id!==a.dataset.id);save();renderAll();break;
     case'open-map':mapTiles($('mapGrid'),APP);$('mapDlg').showModal();break;
-    case'go':if(window.hfDesktop&&MODE==='widget'){window.hfDesktop.openMain(a.dataset.app);break}goApp(a.dataset.app);break;
+    case'go':if(window.hfDesktop&&MODE==='widget'){window.hfDesktop.openMain(a.dataset.app);break}goApp(a.dataset.app,!APP&&canHub()?'push':undefined);break;
     case'open-settings':skyInfo();$('sName').value=state.player||'';renderChoreEdit();renderSync();$('setMsg').textContent='';$('setDlg').showModal();break;
     case'save-settings':{state.player=$('sName').value.trim();const c=$('sChore').value.trim();if(c&&APP){V().habits.push({id:uid(),text:c,freq:'daily',log:[]});$('sChore').value=''}save();renderChoreEdit();renderAll();$('setMsg').textContent='Saved.';break}
     case'del-standing':{const v=V();v.habits=v.habits.filter(h=>h.id!==a.dataset.id);save();renderChoreEdit();renderAll();break}
@@ -1071,7 +1078,7 @@ document.addEventListener('click',e=>{const a=e.target.closest('[data-action]');
     case'export':{const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const u=URL.createObjectURL(blob);const l=document.createElement('a');l.href=u;l.download='hearthfield-backup-'+today()+'.json';document.body.appendChild(l);l.click();l.remove();setTimeout(()=>URL.revokeObjectURL(u),2000);$('setMsg').textContent='Backup saved to your downloads.';break}
     case'notify':if('Notification' in window)Notification.requestPermission().then(p=>{$('setMsg').textContent=p==='granted'?'Reminders are on.':'Reminders are blocked in this browser\'s settings.';checkReminders()});break;
     case'hide-widget':if(window.hfDesktop)window.hfDesktop.hideWidget();break;
-    case'open-main':if(window.hfDesktop)window.hfDesktop.openMain(a.dataset.app||'');else goApp(a.dataset.app||'juniper');break;
+    case'open-main':if(window.hfDesktop)window.hfDesktop.openMain(a.dataset.app||'');else goApp(a.dataset.app||'juniper',!APP&&canHub()?'push':undefined);break;
   }});
 $('rewardForm').addEventListener('submit',e=>{e.preventDefault();const t=$('rwTitle').value.trim(),c=parseInt($('rwCost').value,10);if(!t||!c)return;state.rewards.push({id:uid(),app:APP,title:t,cost:c});$('rwTitle').value='';$('rwCost').value='';save();renderAll()});
 $('importFile').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());if(!Array.isArray(d.villagers))throw 0;state=migrate(d);applyV3(state);normalizeQueue();save();renderAll();$('setMsg').textContent='Backup loaded.'}catch(er){$('setMsg').textContent='That file is not a Hearthfield backup.'}e.target.value=''});
@@ -1107,7 +1114,8 @@ if(MODE==='widget'){document.body.classList.add('widget');renderAll();setInterva
 else{
   if(!APP&&(MODE==='desktop'||window.hfDesktop)){let last='juniper';try{last=localStorage.getItem('hf-last-app')||'juniper'}catch(e){}APP=APPINFO[last]?last:'juniper'}
   bindScene();window.addEventListener('resize',()=>{const m=wantMobile();if(m!==MOB)setLayout()});setLayout();
-  if(APP)goApp(APP);else{document.body.classList.add('hub');hubLogo($('hubLogo'));renderAll()}
+  if(APP&&canHub()){const u=new URL(location.href);u.searchParams.delete('app');history.replaceState(null,'',u);goApp(APP,'push')}
+  else if(APP)goApp(APP);else{document.body.classList.add('hub');hubLogo($('hubLogo'));renderAll()}
   checkBadges();save(false);checkReminders();setInterval(checkReminders,60000);tickTimers();setInterval(tickTimers,1000);
   let lastDay=today();setInterval(()=>{if(today()!==lastDay){lastDay=today();renderAll()}else if(APP)renderNote()},60000);
   requestAnimationFrame(loop)}
