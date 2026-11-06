@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Hearthfield</title>
-<meta name="theme-color" content="#10242b">
+<meta name="theme-color" content="#1d1a2b">
 <link rel="manifest" id="manifestLink" href="manifest.webmanifest">
 <link rel="icon" id="favLink" type="image/png" href="icons/hub-192.png">
 <link rel="apple-touch-icon" id="touchLink" href="icons/hub-192.png">
@@ -18,10 +18,10 @@ if(['bram','wren','otto','juniper'].indexOf(a)>=0){document.getElementById('mani
 /* Layout: a diorama scene with the caretaker's note beside it, then today's list and the two focus goals,
    then the app's own tracker, goals, rewards and progress. Phones show one section at a time with bottom tabs. */
 :root{
-  --bg:#10242b; --bg-2:#0c1d23; --panel:#16323b; --panel-2:#1b3a44; --line:#2a5260; --card:#e9f3f0; --card-ink:#10242b;
-  --ink:#e6f4f0; --muted:#9fbfb7; --dim:#6f938b;
+  --bg:#1d1a2b; --bg-2:#161324; --panel:#2a2540; --panel-2:#352f50; --line:#4a4170; --card:#352f50; --card-ink:#f3ece2;
+  --ink:#f3ece2; --muted:#bdb3cc; --dim:#8e84a3;
   --ok:#5fd17f; --warn:#f2b84a; --bad:#ff7a66; --gold:#f6c840;
-  --accent:#43c7ad; --accent-ink:#06201b;
+  --accent:#f2a97f; --accent-ink:#2a1a14;
   --font:"Lexend",system-ui,-apple-system,"Segoe UI",sans-serif;
   color-scheme:dark;
 }
@@ -81,10 +81,26 @@ textarea{width:100%}
 
 .scene{padding:0;overflow:hidden;position:relative;background:var(--bg-2)}
 .scene canvas{display:block;width:100%;aspect-ratio:720/480;cursor:pointer}
+.appview{display:grid;gap:18px}
 .scene-bar{display:flex;justify-content:space-between;gap:10px;padding:8px 14px;font-size:12.5px;color:var(--muted);flex-wrap:wrap}
 
 .note{display:flex;gap:12px;padding:14px;background:var(--panel-2);color:var(--ink);border-radius:16px;border-left:4px solid var(--accent)}
 .note canvas{width:56px;height:56px;border-radius:12px;flex:none}
+.linkbtn{background:none;border:0;padding:0;margin-top:6px;min-height:32px;color:var(--accent);font:600 13.5px var(--font);cursor:pointer}
+.hlist{display:grid;gap:8px}
+.hrow{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:10px 12px;background:var(--panel-2);border-radius:14px}
+.hrow input[type=checkbox]{width:22px;height:22px;margin:0;accent-color:var(--accent)}
+.hrow label{font-weight:500;font-size:14.5px}
+.hrow.done label{color:var(--dim);text-decoration:line-through}
+.hrow .sub{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:6px;font-size:11.5px;color:var(--muted)}
+.wk{display:flex;gap:5px}
+.wk span{display:grid;justify-items:center;gap:2px;font-size:9px;color:var(--muted)}
+.wk i{display:block;width:10px;height:10px;border-radius:3px;background:var(--line)}
+.wk i.on{background:var(--accent)}
+.wk i.fut{opacity:.35}
+.wk i.now{box-shadow:0 0 0 2px var(--panel-2),0 0 0 3.5px var(--accent)}
+.tbtn{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 14px;border:0;border-radius:22px;background:var(--accent);color:var(--accent-ink);font:600 13px var(--font);font-variant-numeric:tabular-nums;cursor:pointer;white-space:nowrap}
+.tbtn.run{background:var(--panel);color:var(--ink);box-shadow:inset 0 0 0 2px var(--accent)}
 .note .who{font-weight:700;font-size:12.5px;letter-spacing:.5px;color:var(--accent)}
 .note p{font-size:14px;line-height:1.5}
 .note p+p{margin-top:6px}
@@ -158,7 +174,7 @@ textarea{width:100%}
 .heat-wrap{overflow-x:auto;margin-top:12px}
 .heat{display:grid;grid-template-rows:repeat(7,11px);grid-auto-flow:column;grid-auto-columns:11px;gap:3px}
 .heat i{border-radius:3px;background:var(--panel-2)}
-.heat i.l1{background:#1f5a4c} .heat i.l2{background:#2e8a68} .heat i.l3{background:#4cb87a} .heat i.l4{background:#8ae8a0}
+.heat i.l1{background:#4a4a7a} .heat i.l2{background:#7a6aa8} .heat i.l3{background:#c08ab0} .heat i.l4{background:#f2a97f}
 .heat i.today{outline:2px solid var(--gold);outline-offset:-1px}
 .badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-top:12px}
 .badge{display:grid;grid-template-columns:30px 1fr;gap:8px;align-items:center;padding:8px 10px;background:var(--panel-2);border-radius:12px}
@@ -181,7 +197,7 @@ details.shed summary{cursor:pointer;padding:6px 0}
 
 /* dialogs */
 dialog{background:var(--panel);color:var(--ink);border:0;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.5);padding:20px;width:min(560px,calc(100vw - 24px));max-height:calc(100vh - 32px)}
-dialog::backdrop{background:rgba(4,12,14,.7)}
+dialog::backdrop{background:rgba(12,9,24,.72)}
 .form{display:grid;gap:12px}
 .form label{display:grid;gap:4px;font-size:13.5px;font-weight:600;min-width:0}
 .form .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -219,7 +235,11 @@ dialog::backdrop{background:rgba(4,12,14,.7)}
 .tab[aria-selected=true]{color:var(--accent-ink);background:var(--accent)}
 body.mobile{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px));padding-top:max(12px,env(safe-area-inset-top,0px))}
 body.mobile .g-home,body.mobile .g-two,body.mobile .col{display:contents}
-body.mobile [data-tab]:not(.tab-on){display:none!important}
+.appview [data-tab]:not(.tab-on){display:none!important}
+body:not(.mobile):not(.hub):not(.widget) .tabbar{position:static;display:flex;flex-wrap:wrap;gap:8px;background:none;border:0;padding:0}
+body:not(.mobile) .tab{display:flex;align-items:center;gap:8px;padding:9px 16px;font-size:14px;background:var(--panel)}
+body:not(.mobile) .tab svg{width:18px;height:18px}
+body:not(.mobile) .tab[aria-selected=true]{background:var(--accent);color:var(--accent-ink)}
 body.mobile .tabbar{display:grid}
 body.mobile .xp{flex:1 1 100%;order:3}
 body.mobile .hide-m{display:none!important}
@@ -284,52 +304,6 @@ body.widget #widget{display:block}
   </div>
 </header>
 
-<div class="grid g-home">
-  <section class="panel scene" data-tab="home" aria-label="Diorama">
-    <canvas id="scene" width="720" height="480" aria-label="Diorama of this app's island. The garden bed is your current short-term goal and the build site is your long-term goal."></canvas>
-    <div class="scene-bar"><span id="sceneTip">Tap the garden bed or the build site to open a goal</span><span id="clock" class="hide-m"></span></div>
-  </section>
-  <div class="col">
-    <section class="note" data-tab="home" aria-live="polite"><canvas id="noteFace" width="112" height="112" aria-hidden="true"></canvas><div style="min-width:0"><div class="who" id="noteWho"></div><div id="noteBody"></div></div></section>
-    <section class="panel" data-tab="today">
-      <div class="panel-head"><h2>Today</h2><span class="label" id="todayCount"></span></div>
-      <ul class="list" id="todayList"></ul>
-      <div class="panel-head" style="margin:14px 0 8px"><span class="label">Milestones due</span><span class="label">next 7 days</span></div>
-      <ul class="list" id="dueList"></ul>
-    </section>
-  </div>
-</div>
-
-<section data-tab="home"><div class="focus" id="focus"></div></section>
-
-<div class="grid g-two">
-  <section class="panel" data-tab="special" id="special"></section>
-  <section class="panel" data-tab="goals">
-    <div class="panel-head"><h2>Goals</h2><button class="btn small" data-action="new-goal">New goal</button></div>
-    <div class="goal-list" id="goalList"></div>
-  </section>
-</div>
-
-<div class="grid g-two">
-  <section class="panel" data-tab="progress">
-    <div class="panel-head"><h2>Reward shelf</h2><span class="pill coins" id="coinPill2"></span></div>
-    <div class="rewards" id="rewards"></div>
-    <form class="row-form" id="rewardForm"><input id="rwTitle" maxlength="40" placeholder="Reward, like a craft fair day off" required aria-label="Reward"><input id="rwCost" type="number" min="10" step="10" placeholder="Coins" required aria-label="Coin cost" style="width:100px;flex:none"><button class="btn small" type="submit">Add</button></form>
-    <p class="hint" style="margin-top:8px">Earn coins: chore 5 · milestone 20 (+10 on time) · new personal best 25 · finished crop 60 · finished build 150.</p>
-    <div class="redeemed" id="redeemed"></div>
-  </section>
-  <section class="panel" data-tab="progress">
-    <div class="panel-head"><h2>Progress</h2><span class="label" id="badgeCount"></span></div>
-    <div class="stats" id="stats"></div>
-    <div class="heat-wrap"><div class="heat" id="heat"></div></div>
-    <div class="badges" id="badges"></div>
-  </section>
-</div>
-
-<section class="panel hide-m"><div class="panel-head"><h2>News</h2></div><ul class="news" id="news"></ul></section>
-</div>
-</div>
-
 <nav class="tabbar" id="tabbar" aria-label="Sections">
   <button class="tab" data-tabbtn="home" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9H3z"/><path d="M9 20v-6h6v6"/></svg>Home</button>
   <button class="tab" data-tabbtn="today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12l4 4 10-10"/></svg>Today</button>
@@ -337,6 +311,52 @@ body.widget #widget{display:block}
   <button class="tab" data-tabbtn="goals"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 21c-4-3-7-6-7-10a7 7 0 0114 0c0 4-3 7-7 10z"/><circle cx="12" cy="11" r="2.5"/></svg>Goals</button>
   <button class="tab" data-tabbtn="progress"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.6 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/></svg>Rewards</button>
 </nav>
+<div class="grid g-home" data-tab="home">
+  <section class="panel scene" aria-label="Diorama">
+    <canvas id="scene" width="720" height="480" aria-label="Diorama of this app's island. The pin on the garden bed is your short-term goal and the pin on the build site is your long-term goal."></canvas>
+    <div class="scene-bar"><span id="sceneTip">Tap a pin to open a goal</span><span id="clock"></span></div>
+  </section>
+  <div class="col">
+    <section class="note" aria-live="polite"><canvas id="noteFace" width="112" height="112" aria-hidden="true"></canvas><div style="min-width:0"><div class="who" id="noteWho"></div><div id="noteBody"></div></div></section>
+    <section class="panel"><div class="panel-head"><h2>Today</h2><span class="label" id="homeCount"></span></div><div class="hlist" id="homeToday"></div></section>
+  </div>
+</div>
+
+<section data-tab="home"><div class="focus" id="focus"></div></section>
+
+<section class="panel" data-tab="today">
+      <div class="panel-head"><h2>Today</h2><span class="label" id="todayCount"></span></div>
+      <ul class="list" id="todayList"></ul>
+      <div class="panel-head" style="margin:14px 0 8px"><span class="label">Milestones due</span><span class="label">next 7 days</span></div>
+      <ul class="list" id="dueList"></ul>
+</section>
+<section class="panel" data-tab="special" id="special"></section>
+<section class="panel" data-tab="goals">
+    <div class="panel-head"><h2>Goals</h2><button class="btn small" data-action="new-goal">New goal</button></div>
+    <div class="goal-list" id="goalList"></div>
+  </section>
+
+<div class="grid g-two" data-tab="progress">
+  <section class="panel">
+    <div class="panel-head"><h2>Reward shelf</h2><span class="pill coins" id="coinPill2"></span></div>
+    <div class="rewards" id="rewards"></div>
+    <form class="row-form" id="rewardForm"><input id="rwTitle" maxlength="40" placeholder="Reward, like a craft fair day off" required aria-label="Reward"><input id="rwCost" type="number" min="10" step="10" placeholder="Coins" required aria-label="Coin cost" style="width:100px;flex:none"><button class="btn small" type="submit">Add</button></form>
+    <p class="hint" style="margin-top:8px">Earn coins: chore 5 · milestone 20 (+10 on time) · new personal best 25 · finished crop 60 · finished build 150.</p>
+    <div class="redeemed" id="redeemed"></div>
+  </section>
+  <section class="panel">
+    <div class="panel-head"><h2>Progress</h2><span class="label" id="badgeCount"></span></div>
+    <div class="stats" id="stats"></div>
+    <div class="heat-wrap"><div class="heat" id="heat"></div></div>
+    <div class="badges" id="badges"></div>
+  </section>
+</div>
+
+<section class="panel" data-tab="progress"><div class="panel-head"><h2>News</h2></div><ul class="news" id="news"></ul></section>
+</div>
+</div>
+
+
 
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
@@ -372,6 +392,9 @@ body.widget #widget{display:block}
   <div class="two"><label>Your name<input id="sName" maxlength="20" placeholder="Farmer"></label><label>Chores for this app <span class="hint">daily</span><input id="sChore" maxlength="50" placeholder="Add a standing chore"></label></div>
   <div class="actions"><button class="btn small" data-action="save-settings">Save</button><button class="btn small" data-action="notify" id="notifyBtn">Turn on reminders</button></div>
   <div id="choreEdit"></div>
+  <h3>Sky</h3>
+  <p class="hint" id="skyInfo"></p>
+  <div class="actions"><button class="btn small" data-action="sky-locate">Use my location</button></div>
   <h3>Sync across devices</h3>
   <div id="syncBox" style="display:grid;gap:10px;padding:12px;border-radius:14px;background:var(--panel-2)"></div>
   <h3>Backup</h3>
@@ -643,13 +666,61 @@ function animal(x,ox,oy,sc,sp,apron,blink){const S=SPECIES[sp]||SPECIES.fox;cons
   if(S.mark==='whisk'){x.strokeStyle='#2a2320';x.lineWidth=.8*sc;[[-4,-28,-12,-30],[4,-28,12,-30],[-4,-27,-12,-26],[4,-27,12,-26]].forEach(([a,b,c,d])=>{const p1=P(a,b),p2=P(c,d);x.beginPath();x.moveTo(p1[0],p1[1]);x.lineTo(p2[0],p2[1]);x.stroke()})}
 }
 function portrait(cv,app){const x=cv.getContext('2d'),W=cv.width;const A=APPINFO[app];x.clearRect(0,0,W,W);
-  x.fillStyle='#1b3a44';x.beginPath();x.roundRect(0,0,W,W,W*.24);x.fill();
+  x.fillStyle='#352f50';x.beginPath();x.roundRect(0,0,W,W,W*.24);x.fill();
   x.fillStyle=shade(A.color,-.55);x.beginPath();x.moveTo(0,W*.78);x.lineTo(W,W*.66);x.lineTo(W,W);x.lineTo(0,W);x.fill();
   animal(x,W/2,W*.98,W/62,A.species,A.color,false)}
-function hubLogo(cv){const x=cv.getContext('2d'),W=cv.width;x.fillStyle='#1b3a44';x.beginPath();x.roundRect(0,0,W,W,W*.24);x.fill();
+function hubLogo(cv){const x=cv.getContext('2d'),W=cv.width;x.fillStyle='#352f50';x.beginPath();x.roundRect(0,0,W,W,W*.24);x.fill();
   const s=W/96;const pts=[[48,18],[78,36],[48,54],[18,36]];x.fillStyle='#8cc46a';x.beginPath();pts.forEach((p,i)=>i?x.lineTo(p[0]*s,p[1]*s):x.moveTo(p[0]*s,p[1]*s));x.fill();
   x.fillStyle='#8a6648';x.beginPath();x.moveTo(18*s,36*s);x.lineTo(48*s,54*s);x.lineTo(48*s,64*s);x.lineTo(18*s,46*s);x.fill();x.fillStyle='#6a4e36';x.beginPath();x.moveTo(78*s,36*s);x.lineTo(48*s,54*s);x.lineTo(48*s,64*s);x.lineTo(78*s,46*s);x.fill();
   ['#6fd08a','#7cb4ff','#ff9a52','#f6c840'].forEach((c,i)=>{x.fillStyle=c;const a=[[38,30],[56,30],[38,42],[56,42]][i];x.beginPath();x.arc(a[0]*s,a[1]*s,5*s,0,7);x.fill()})}
+
+/* ---- sky: real sunrise and sunset ---- */
+function skyLoc(){try{const s=JSON.parse(localStorage.getItem('hf-sky')||'null');if(s&&isFinite(s.lat)&&isFinite(s.lng))return s}catch(e){}
+  const y=new Date().getFullYear(),std=Math.max(new Date(y,0,1).getTimezoneOffset(),new Date(y,6,1).getTimezoneOffset());return{lat:38,lng:-std/4,guess:true}}
+function sunTimes(d,lat,lng){const rad=Math.PI/180,N=Math.round((new Date(d.getFullYear(),d.getMonth(),d.getDate())-new Date(d.getFullYear(),0,0))/864e5),g=2*Math.PI/365*(N-.5);
+  const eq=229.18*(.000075+.001868*Math.cos(g)-.032077*Math.sin(g)-.014615*Math.cos(2*g)-.040849*Math.sin(2*g));
+  const dec=.006918-.399912*Math.cos(g)+.070257*Math.sin(g)-.006758*Math.cos(2*g)+.000907*Math.sin(2*g)-.002697*Math.cos(3*g)+.00148*Math.sin(3*g);
+  const c=(Math.cos(90.833*rad)-Math.sin(lat*rad)*Math.sin(dec))/(Math.cos(lat*rad)*Math.cos(dec));if(c>1)return{rise:6,set:18,polar:'night'};if(c<-1)return{rise:6,set:18,polar:'day'};
+  const ha=Math.acos(c)/rad,noon=720-4*lng-eq-d.getTimezoneOffset();return{rise:(noon-4*ha)/60,set:(noon+4*ha)/60}}
+let SUN={day:''};
+function sunNow(){const k=today();if(SUN.day!==k){const L=skyLoc();SUN={day:k,t:sunTimes(new Date(),L.lat,L.lng),guess:!!L.guess}}return SUN.t}
+const SKYQ=(()=>{const v=parseFloat(new URLSearchParams(location.search).get('sky'));return isFinite(v)?v:null})();
+function skyState(){const d=new Date(),t=sunNow(),h=SKYQ!==null?SKYQ:d.getHours()+d.getMinutes()/60+d.getSeconds()/3600,sr=t.rise,ss=t.set;let day;
+  if(t.polar)day=t.polar==='day'?1:0;else if(h<sr-.75||h>ss+.75)day=0;else if(h<sr+.75)day=(h-sr+.75)/1.5;else if(h>ss-.75)day=1-(h-ss+.75)/1.5;else day=1;
+  const glow=t.polar?0:Math.max(0,1-Math.min(Math.abs(h-sr),Math.abs(h-ss))/1.1);return{day,glow,h,sr,ss}}
+const clock12=x=>{x=((x%24)+24)%24;let hh=Math.floor(x),mm=Math.round((x-hh)*60);if(mm===60){hh=(hh+1)%24;mm=0}return(hh%12||12)+':'+String(mm).padStart(2,'0')+(hh<12?' AM':' PM')};
+function skyInfo(){const t=sunNow();$('skyInfo').textContent=t.polar?'The sun stays '+(t.polar==='day'?'up':'down')+' all day where you are.':'Sunrise '+clock12(t.rise)+' · sunset '+clock12(t.set)+(SUN.guess?' (estimated from your time zone; tap below for your exact times)':' (from your location)')}
+const rgbOf=h=>{const n=parseInt(h.slice(1),16);return[n>>16,n>>8&255,n&255]};
+const mixc=(a,b,t)=>{const A=typeof a==='string'?rgbOf(a):a,B=typeof b==='string'?rgbOf(b):b;return A.map((v,i)=>v+(B[i]-v)*t)};
+const rgb=(c,al)=>(al==null?'rgb(':'rgba(')+c.map(Math.round).join(',')+(al==null?')':','+al.toFixed(3)+')');
+const SKY={night:['#0d0b20','#2a2150'],day:['#86b6de','#f2dcc4'],glow:['#4a3670','#f2976f']};
+function rng(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function paintSky(c,W,H,s,hy){const sc=W/720,day=s.day,glow=s.glow,r=rng(11);
+  const top=mixc(mixc(SKY.night[0],SKY.day[0],day),SKY.glow[0],glow*.8),bot=mixc(mixc(SKY.night[1],SKY.day[1],day),SKY.glow[1],glow*.85);
+  const gr=c.createLinearGradient(0,0,0,hy);gr.addColorStop(0,rgb(top));gr.addColorStop(1,rgb(bot));c.fillStyle=gr;c.fillRect(0,0,W,H);
+  const skyAt=y=>mixc(top,bot,Math.max(0,Math.min(1,y/hy)));
+  for(let k=0;k<70;k++){const x=r()*W,y=r()*hy*.8,a=(1-day)*(.35+.6*r());if(a>.02){c.fillStyle='rgba(255,246,228,'+a.toFixed(3)+')';const z=(1+r()*1.4)*sc;c.fillRect(x,y,z,z)}else r()}
+  if(s.h>s.sr-.6&&s.h<s.ss+.6){const f=(s.h-s.sr)/(s.ss-s.sr),x=W*(.1+.8*f),y=hy-Math.sin(Math.PI*f)*H*.5,R=15*sc;
+    const hal=c.createRadialGradient(x,y,R*.5,x,y,R*5);hal.addColorStop(0,'rgba(255,214,150,'+(.35+.3*glow).toFixed(3)+')');hal.addColorStop(1,'rgba(255,214,150,0)');c.fillStyle=hal;c.fillRect(x-R*5,y-R*5,R*10,R*10);
+    c.fillStyle=rgb(mixc('#ffbf86','#fff3d6',day));c.beginPath();c.arc(x,y,R,0,7);c.fill()}
+  else{const hh=s.h<s.sr?s.h+24:s.h,f=(hh-s.ss)/(s.sr+24-s.ss),x=W*(.1+.8*f),y=hy-Math.sin(Math.PI*f)*H*.45,R=11*sc;
+    c.fillStyle='#efe6d2';c.beginPath();c.arc(x,y,R,0,7);c.fill();c.fillStyle=rgb(skyAt(y));c.beginPath();c.arc(x+R*.45,y-R*.25,R*.88,0,7);c.fill()}
+  const far=rgb(mixc('#221d3e','#c4bdd8',day)),near=mixc('#17142c','#a39bc4',day),side=rgb(mixc(near,[0,0,0],.18)),roof=rgb(mixc('#24342c','#79b06e',day));
+  let x=-10*sc;c.fillStyle=far;while(x<W){const w=(16+r()*22)*sc,h=H*(.16+r()*.2);if(r()<.3){c.beginPath();c.arc(x+w/2,hy-h,w/2,Math.PI,0);c.fill()}c.fillRect(x,hy-h,w,H);x+=w+(r()<.3?4*sc:0)}
+  c.fillStyle=rgb(bot,.22);c.fillRect(0,0,W,H);
+  const turb=[];x=-6*sc;let n=0;
+  while(x<W){const w=(24+r()*30)*sc,h=H*(.2+r()*.26),y0=hy-h,green=r()<.5,step=r()<.35;n++;
+    c.fillStyle=rgb(near);c.fillRect(x,y0,w,H);c.fillStyle=side;c.fillRect(x+w*.78,y0,w*.22,H);
+    if(step){c.fillStyle=rgb(near);c.fillRect(x+w*.2,y0-10*sc,w*.5,10*sc)}
+    if(green){c.fillStyle=roof;c.fillRect(x,y0-3*sc,w,4*sc);for(let b=0;b<3;b++){c.beginPath();c.arc(x+w*(.2+.3*b),y0-3*sc,3.5*sc,Math.PI,0);c.fill()}}
+    if(n%5===3)turb.push({x:x+w/2,y:y0-(step?10*sc:0),len:13*sc});
+    for(let wy=y0+8*sc;wy<hy-6*sc;wy+=9*sc)for(let wx=x+4*sc;wx<x+w*.74-3*sc;wx+=7*sc){const q=r(),q2=r();
+      if(day>.05){c.fillStyle='rgba(150,190,230,'+(.55*day).toFixed(3)+')';c.fillRect(wx,wy,3*sc,4*sc)}
+      if(day<.95&&q<.4){c.fillStyle=(q2<.12?'rgba(127,224,208,':'rgba(244,199,110,')+((1-day)*(.5+.5*q2)).toFixed(3)+')';c.fillRect(wx,wy,3*sc,4*sc)}}
+    x+=w+(r()<.25?3*sc:0)}
+  const fog=c.createLinearGradient(0,hy-H*.04,0,H);fog.addColorStop(0,rgb(bot,0));fog.addColorStop(.35,rgb(mixc(bot,'#1d1a2b',.35),.75));fog.addColorStop(1,rgb(mixc('#1d1a2b','#8d86ad',day*.6)));c.fillStyle=fog;c.fillRect(0,hy-H*.04,W,H);
+  c.strokeStyle=rgb(mixc('#3a3456','#e9e4f2',day));c.lineWidth=1.5*sc;turb.forEach(t=>{c.beginPath();c.moveTo(t.x,t.y);c.lineTo(t.x,t.y-t.len*1.4);c.stroke()});
+  return turb}
 
 /* ---- scene ---- */
 function Scene(cv,app,opts){this.cv=cv;this.x=cv.getContext('2d');this.app=app;this.opts=opts||{};this.parts=[];this.walkT=0;this.spot=0;this.pos=null;this.hover=null;this.cheer=0}
@@ -663,9 +734,14 @@ Scene.prototype.tree=function(i,j,s,c1,c2){this.box(i-.1,j-.1,0,.2,.2,.7*s,'#8a5
   const t=this.iso(i,j,0.7*s+2*s),L=this.iso(i-.65*s,j+.65*s,0.7*s),R=this.iso(i+.65*s,j-.65*s,0.7*s),F=this.iso(i+.65*s,j+.65*s,0.7*s);this.face([t,L,F],c1||'#4cae6a');this.face([t,F,R],c2||'#2f8a52');
   const t2=this.iso(i,j,0.7*s+2.8*s),L2=this.iso(i-.45*s,j+.45*s,1.5*s),R2=this.iso(i+.45*s,j-.45*s,1.5*s),F2=this.iso(i+.45*s,j+.45*s,1.5*s);this.face([t2,L2,F2],shade(c1||'#4cae6a',.15));this.face([t2,F2,R2],shade(c2||'#2f8a52',.1))};
 Scene.prototype.chip=function(i,j,k,txt,col){if(!txt)return;const x=this.x,p=this.iso(i,j,k);const fs=Math.max(10,this.T*(this.big?.78:.42));x.font='600 '+fs+'px Lexend, system-ui, sans-serif';const w=Math.min(x.measureText(txt).width+fs*1.3,this.cv.width*.46);
-  const lx=Math.max(4,Math.min(this.cv.width-w-4,p[0]-w/2));x.fillStyle='rgba(233,243,240,.95)';x.beginPath();x.roundRect(lx,p[1]-fs*1.1,w,fs*1.9,fs*.95);x.fill();
+  const lx=Math.max(4,Math.min(this.cv.width-w-4,p[0]-w/2));x.fillStyle='rgba(243,236,226,.95)';x.beginPath();x.roundRect(lx,p[1]-fs*1.1,w,fs*1.9,fs*.95);x.fill();
   if(col){x.fillStyle=col;x.beginPath();x.arc(lx+fs*.75,p[1]-fs*.15,fs*.28,0,7);x.fill()}
-  x.fillStyle='#10242b';x.textBaseline='middle';x.textAlign='left';let t=txt;while(x.measureText(t).width>w-fs*1.6&&t.length>4)t=t.slice(0,-2);if(t!==txt)t=t.slice(0,-1)+'…';x.fillText(t,lx+fs*(col?1.2:.65),p[1]-fs*.13)};
+  x.fillStyle='#2a2033';x.textBaseline='middle';x.textAlign='left';let t=txt;while(x.measureText(t).width>w-fs*1.6&&t.length>4)t=t.slice(0,-2);if(t!==txt)t=t.slice(0,-1)+'…';x.fillText(t,lx+fs*(col?1.2:.65),p[1]-fs*.13)};
+Scene.prototype.pin=function(i,j,k,col,sym){const x=this.x,p=this.iso(i,j,k),r=this.T*(this.big?.6:.42),bob=Math.sin(performance.now()/500+i)*r*.12,cx=p[0],cy=p[1]-r*1.6+bob;
+  x.fillStyle='rgba(0,0,0,.25)';x.beginPath();x.ellipse(p[0],p[1]+2,r*.5,r*.18,0,0,7);x.fill();
+  x.fillStyle=col;x.beginPath();x.moveTo(cx,cy+r*1.6);x.bezierCurveTo(cx-r*.5,cy+r*.9,cx-r,cy+r*.55,cx-r,cy);x.arc(cx,cy,r,Math.PI,0);x.bezierCurveTo(cx+r,cy+r*.55,cx+r*.5,cy+r*.9,cx,cy+r*1.6);x.fill();
+  x.fillStyle='#fff8ee';x.beginPath();x.arc(cx,cy,r*.45,0,7);x.fill();
+  if(sym){x.fillStyle=col;x.font='700 '+(r*.85)+'px Lexend, sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(sym,cx,cy+1)}};
 Scene.prototype.sign=function(i,j,k,w,text,bg,fg){const p=(a,c)=>this.iso(i+a,j,k+c);this.face([p(0,0),p(w,0),p(w,.5),p(0,.5)],bg);
   const x=this.x,c=p(w/2,.25);x.save();x.translate(c[0],c[1]);x.transform(1,.5,0,1,0,0);x.fillStyle=fg;x.font='700 '+(this.T*.36)+'px Lexend, Arial';x.textAlign='center';x.textBaseline='middle';x.fillText(text,0,0);x.restore()};
 const HOME={
@@ -723,11 +799,15 @@ Scene.prototype.ground=function(){const s=this;
   for(let i=-1;i<5;i++)for(let j=0;j<2;j++)s.box(i-.6,j-.6,.02,1,1,.05,(i+j)%2?'#d8ccb0':'#e6dcc2','#b8ab90','#a89a80');
   for(let j=2;j<6;j++)s.box(-.1,j-.6,.02,1,1,.05,j%2?'#d8ccb0':'#e6dcc2','#b8ab90','#a89a80')};
 Scene.prototype.hit=function(px,py){const ip=(i,j,w,d,h)=>{const pts=[this.iso(i,j,0),this.iso(i+w,j,0),this.iso(i+w,j+d,0),this.iso(i,j+d,0),this.iso(i,j,h),this.iso(i+w,j,h),this.iso(i+w,j+d,h),this.iso(i,j+d,h)];const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]);return px>=Math.min(...xs)&&px<=Math.max(...xs)&&py>=Math.min(...ys)&&py<=Math.max(...ys)};
-  if(ip(-4.2,1.3,3.2,2.2,1.6))return'short';if(ip(.9,-4.6,3.8,3.6,5))return'long';return null};
-Scene.prototype.draw=function(t){const x=this.x,W=this.cv.width,H=this.cv.height;this.layout();
-  const app=this.app,A=APPINFO[app],v=state.villagers.find(z=>z.id===A.vid);
-  const g=x.createLinearGradient(0,0,0,H);g.addColorStop(0,'#1d3b4a');g.addColorStop(1,'#0c1d23');x.fillStyle=g;x.fillRect(0,0,W,H);
-  x.fillStyle='rgba(120,220,200,.10)';const gs=Math.max(16,W/30);for(let a=gs/2;a<W;a+=gs)for(let b=gs/2;b<H;b+=gs)x.fillRect(a,b,2,2);
+  if(ip(-4.2,1.3,3.2,2.2,2.8))return'short';if(ip(.9,-4.6,3.8,3.6,7))return'long';return null};
+Scene.prototype.drawSky=function(t,s){const x=this.x,W=this.cv.width,H=this.cv.height,key=W+'x'+H+':'+Math.floor(Date.now()/60000)+':'+SUN.day;
+  if(!this.bg)this.bg=document.createElement('canvas');if(this.bgKey!==key){this.bgKey=key;this.bg.width=W;this.bg.height=H;this.turb=paintSky(this.bg.getContext('2d'),W,H,s,this.O[1]-this.T*.9)}
+  x.drawImage(this.bg,0,0);x.strokeStyle=rgb(mixc('#3a3456','#f3eef8',s.day));x.lineWidth=Math.max(1,W/480);
+  (this.turb||[]).forEach((b,i)=>{const cx=b.x,cy=b.y-b.len*1.4;for(let k=0;k<3;k++){const an=t*1.2+i+k*2.094;x.beginPath();x.moveTo(cx,cy);x.lineTo(cx+Math.cos(an)*b.len,cy+Math.sin(an)*b.len);x.stroke()}})};
+Scene.prototype.draw=function(t){const main=this.cv.getContext('2d'),W=this.cv.width,H=this.cv.height;this.layout();
+  const app=this.app,A=APPINFO[app],v=state.villagers.find(z=>z.id===A.vid),sky=skyState();
+  if(!this.fg)this.fg=document.createElement('canvas');if(this.fg.width!==W||this.fg.height!==H){this.fg.width=W;this.fg.height=H}
+  let x=this.fg.getContext('2d');x.clearRect(0,0,W,H);this.x=x;
   const sh=focus(A.vid,'short'),lg=focus(A.vid,'long');const ss=stageOf(sh),ls=stageOf(lg);
   const dry=!!(sh&&choresFor(A.vid).some(o=>o.h.freq==='daily')&&!choresFor(A.vid).some(o=>o.h.freq==='daily'&&habitDoneNow(o.h)));
   this.ground();
@@ -754,13 +834,15 @@ Scene.prototype.draw=function(t){const x=this.x,W=this.cv.width,H=this.cv.height
   animal(x,this.pos[0],this.pos[1]-hop,this.T/26,A.species,v.color?A.color:A.color,(t%4)<.12);
   if(!walking&&Math.random()<.05)this.parts.push({x:this.pos[0]+(Math.random()-.5)*this.T,y:this.pos[1]-this.T*1.4,vy:-1.2,vx:(Math.random()-.5),l:1,c:Math.random()<.5?'#ffe066':'#bfe6ff'});
   for(let k=this.parts.length-1;k>=0;k--){const p=this.parts[k];p.l-=1/45;p.vy+=.06;p.x+=p.vx;p.y+=p.vy;x.fillStyle=p.c;x.fillRect(p.x,p.y,3,3);if(p.l<=0)this.parts.splice(k,1)}
-  // labels
-  if(!this.opts.mini){const ns=sh&&nextMs(sh),nl=lg&&nextMs(lg);
-    this.chip(-2.6,2.4,2.3,sh?(ns?ns.text+(ns.due?' · '+whenText(ns.due):''):'Ready to harvest!'):'Empty bed: plant a goal',sh&&ns&&ns.due&&daysUntil(ns.due)<=0?'#ff7a66':null);
-    this.chip(2.7,-2.9,lg?(ls>=3?6.4:4.6):2.6,lg?(nl?Math.round(progress(lg)*100)+'% · '+nl.text:'Build complete!'):'Empty site: start a build',null);
-    if(this.hover){x.strokeStyle='rgba(233,243,240,.8)';x.lineWidth=2;x.setLineDash([6,5]);const b=this.hover==='short'?[-4.4,1.1,3.6,2.6]:[.8,-4.7,4,3.8];const p=[this.iso(b[0],b[1],0),this.iso(b[0]+b[2],b[1],0),this.iso(b[0]+b[2],b[1]+b[3],0),this.iso(b[0],b[1]+b[3],0)];x.beginPath();p.forEach((q,n)=>n?x.lineTo(q[0],q[1]):x.moveTo(q[0],q[1]));x.closePath();x.stroke();x.setLineDash([])}}
-  // night tint
-  const h=new Date().getHours()+new Date().getMinutes()/60;const dk=h>=21||h<6?.32:h>=19?.15:h<7.5?.15:0;if(dk&&!this.opts.mini){x.fillStyle='rgba(10,16,48,'+dk+')';x.fillRect(0,0,W,H)}
+  // evening and night shade the island; sunrise and sunset warm it
+  x.save();x.globalCompositeOperation='source-atop';if(sky.day<1){x.fillStyle='rgba(16,10,44,'+(.42*(1-sky.day)).toFixed(3)+')';x.fillRect(0,0,W,H)}if(sky.glow>0){x.fillStyle='rgba(255,150,90,'+(.12*sky.glow).toFixed(3)+')';x.fillRect(0,0,W,H)}x.restore();
+  this.x=main;x=main;this.drawSky(t,sky);x.drawImage(this.fg,0,0);
+  // pins: tap to open a goal; hover shows the label
+  if(!this.opts.mini){const ns=sh&&nextMs(sh),nl=lg&&nextMs(lg),late=sh&&ns&&ns.due&&daysUntil(ns.due)<=0,lk=lg?(ls>=3?6.2:4.4):2.4;
+    this.pin(-2.6,2.4,1.6,late?'#ff7a66':A.color,sh?'':'+');this.pin(2.7,-2.9,lk,A.color,lg?'':'+');
+    if(this.hover){x.strokeStyle='rgba(233,243,240,.8)';x.lineWidth=2;x.setLineDash([6,5]);const b=this.hover==='short'?[-4.4,1.1,3.6,2.6]:[.8,-4.7,4,3.8];const p=[this.iso(b[0],b[1],0),this.iso(b[0]+b[2],b[1],0),this.iso(b[0]+b[2],b[1]+b[3],0),this.iso(b[0],b[1]+b[3],0)];x.beginPath();p.forEach((q,n)=>n?x.lineTo(q[0],q[1]):x.moveTo(q[0],q[1]));x.closePath();x.stroke();x.setLineDash([])
+      if(this.hover==='short')this.chip(-2.6,2.4,3.9,sh?(ns?ns.text+(ns.due?' · '+whenText(ns.due):''):'Ready to harvest!'):'Empty bed: plant a goal',late?'#ff7a66':null);
+      else this.chip(2.7,-2.9,lk+2.3,lg?(nl?Math.round(progress(lg)*100)+'% · '+nl.text:'Build complete!'):'Empty site: start a build',null)}}
 };
 
 /* ======================= UI ======================= */
@@ -792,7 +874,9 @@ function noteText(){const A=APPINFO[APP],v=V(),vid=A.vid,h=new Date().getHours()
   if(APP==='wren'){const r=state.books.filter(b=>b.status==='reading');P.push('<p>'+(r.length?'Currently reading: <b>'+esc(r[0].title)+'</b>.':'Nothing on the reading stand. Add a book to the shelf.')+'</p>')}
   if(APP==='otto'){const wkMin=state.practice.filter(p=>p.d>=addDays(-6)).reduce((a,p)=>a+(+p.min||0),0);P.push('<p>Shop time this week: <b>'+wkMin+' minutes</b> of practice logged.</p>')}
   return P.join('')}
-function renderNote(){$('noteWho').textContent=APPINFO[APP].name.toUpperCase();$('noteBody').innerHTML=noteText()}
+let noteOpen=false;
+function renderNote(){$('noteWho').textContent=APPINFO[APP].name.toUpperCase();const P=noteText().split('</p>').filter(Boolean).map(x=>x+'</p>');
+  $('noteBody').innerHTML=P.slice(0,2).join('')+(P.length>2?'<div'+(noteOpen?'':' hidden')+'>'+P.slice(2).join('')+'</div><button class="linkbtn" data-action="note-more">'+(noteOpen?'Less':'More')+'</button>':'')}
 
 function renderToday(){const vid=APPINFO[APP].vid;const ch=choresFor(vid).sort((a,b)=>(a.h.freq>b.h.freq?1:-1));
   $('todayList').innerHTML=ch.length?ch.map(({h,g})=>{const d=habitDoneNow(h),st=habitStreak(h);return '<li class="row'+(d?' done':'')+'"><input type="checkbox" id="h-'+h.id+'" data-action="habit" data-id="'+h.id+'" '+(d?'checked':'')+'><label for="h-'+h.id+'">'+esc(h.text)+'<div class="meta">'+(g?esc(g.title):'Standing chore')+(h.freq==='weekly'?' · weekly':'')+'</div></label><span class="streak">'+(st?st+(h.freq==='weekly'?'w':'d'):'')+'</span></li>'}).join(''):'<li class="empty">No chores yet. Add one in Settings or on a goal.</li>';
@@ -800,8 +884,29 @@ function renderToday(){const vid=APPINFO[APP].vid;const ch=choresFor(vid).sort((
   const due=dueFor(vid);
   $('dueList').innerHTML=due.length?due.map(({g,m,n})=>'<li class="row"><input type="checkbox" id="d-'+m.id+'" data-action="ms" data-g="'+g.id+'" data-id="'+m.id+'"><label for="d-'+m.id+'">'+esc(m.text)+'<div class="meta">'+esc(g.title)+'</div></label><span class="when '+(n<0?'late':n===0?'today':'')+'">'+whenText(m.due)+'</span></li>').join(''):'<li class="empty">Nothing due this week.</li>'}
 
+const TMR_RE=/(\d+(?:\.\d+)?)\s*(hours?|hrs?|h|minutes?|mins?|m)\b/i;
+function timerMins(h){const m=TMR_RE.exec(h.text);if(!m)return 0;const n=parseFloat(m[1])*(/^h/i.test(m[2])?60:1);return n>=1&&n<=240?n:0}
+let TIMERS={};try{TIMERS=JSON.parse(localStorage.getItem('hf-timers')||'{}')}catch(e){}
+const saveTimers=()=>{try{localStorage.setItem('hf-timers',JSON.stringify(TIMERS))}catch(e){}};
+const mmss=ms=>{const t=Math.max(0,Math.ceil(ms/1000));return Math.floor(t/60)+':'+String(t%60).padStart(2,'0')};
+const PLAY='<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z" fill="currentColor"/></svg>',STOP='<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><rect x="2" y="2" width="8" height="8" rx="1.5" fill="currentColor"/></svg>';
+function timerBtn(h){const mins=timerMins(h);if(!mins||habitDoneNow(h))return'';const end=TIMERS[h.id],run=end&&end>Date.now();
+  return '<button type="button" class="tbtn'+(run?' run':'')+'" data-action="timer" data-id="'+h.id+'" data-timer="'+h.id+'" aria-label="'+(run?'Stop':'Start')+' '+mins+' minute timer">'+(run?STOP+mmss(end-Date.now()):PLAY+mmss(mins*60000))+'</button>'}
+function weekStrip(h){const t=today();
+  if(h.freq==='weekly'){const now=weekKey(t);return '<span class="wk" aria-label="Last 7 weeks">'+[...Array(7)].map((_,i)=>{const k=addDays(-(6-i)*7,now);return '<span><i class="'+(h.log.some(x=>weekKey(x)===k)?'on':'')+(i===6?' now':'')+'"></i></span>'}).join('')+'</span>'}
+  const dow=(new Date().getDay()+6)%7;return '<span class="wk" aria-label="This week">'+[...Array(7)].map((_,i)=>{const d=addDays(i-dow);return '<span><i class="'+(h.log.includes(d)?'on':'')+(i>dow?' fut':'')+(i===dow?' now':'')+'"></i>'+'MTWTFSS'[i]+'</span>'}).join('')+'</span>'}
+function renderHomeToday(){const vid=APPINFO[APP].vid;const ch=choresFor(vid).sort((a,b)=>(a.h.freq>b.h.freq?1:-1));const due=dueFor(vid).filter(i=>i.n<=0);
+  const rows=ch.map(({h,g})=>{const d=habitDoneNow(h),st=habitStreak(h);return '<div class="hrow'+(d?' done':'')+'"><input type="checkbox" id="hh-'+h.id+'" data-action="habit" data-id="'+h.id+'" '+(d?'checked':'')+'><div style="min-width:0"><label for="hh-'+h.id+'">'+esc(h.text)+'</label><div class="sub">'+weekStrip(h)+'<span>'+(h.freq==='weekly'?'weekly':st?st+' day streak':'')+'</span></div></div>'+timerBtn(h)+'</div>'})
+   .concat(due.map(({g,m,n})=>'<div class="hrow"><input type="checkbox" id="hm-'+m.id+'" data-action="ms" data-g="'+g.id+'" data-id="'+m.id+'"><div style="min-width:0"><label for="hm-'+m.id+'">'+esc(m.text)+'</label><div class="sub"><span class="when '+(n<0?'late':'today')+'">'+whenText(m.due)+'</span><span>'+esc(g.title)+'</span></div></div><span></span></div>'));
+  $('homeToday').innerHTML=rows.length?rows.join(''):'<p class="empty">Nothing on today&#39;s list. Add a chore in Settings.</p>';
+  const done=ch.filter(o=>habitDoneNow(o.h)).length;$('homeCount').textContent=done+' of '+(ch.length+due.length)+' done'}
+function tickTimers(){const now=Date.now();let fin=false;
+  Object.keys(TIMERS).forEach(id=>{if(TIMERS[id]<=now){delete TIMERS[id];const f=findHabit(id);if(f&&!habitDoneNow(f.h)){setHabit(f.h,true);cheer(f.v.id);toast('Time!',f.h.text+' is checked off · +5 coins');try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch(e){}
+      if('Notification' in window&&Notification.permission==='granted'&&document.visibilityState!=='visible')notify('Time!',f.h.text+' is done and checked off.',APP||'wren');fin=true}}});
+  if(fin){saveTimers();checkBadges();save();renderAll();return}
+  document.querySelectorAll('[data-timer]').forEach(b=>{const end=TIMERS[b.dataset.timer];if(end)b.lastChild.textContent=mmss(end-now)})}
 function renderFocus(){const vid=APPINFO[APP].vid;const card=(g,hz)=>{if(!g)return '<button class="fcard" data-action="new-goal" data-hz="'+hz+'"><span class="k">'+(hz==='long'?'Long-term build':'Short-term crop')+'</span><span class="t">Nothing planted</span><span class="n">'+(queueOf(vid).some(x=>x.horizon===hz)?'A goal is waiting in the seed shed.':'Tap to plant a goal here.')+'</span></button>';
-  const n=nextMs(g),pc=pace(g);return '<button class="fcard" data-action="open-goal" data-id="'+g.id+'"><span class="k">'+(hz==='long'?'Building now':'Growing now')+'</span><span class="t">'+esc(g.title)+'</span>'+barHtml(progress(g))+'<span class="n">'+(n?'Next: '+esc(n.text)+(n.due?' · '+whenText(n.due):''):'Ready to '+(hz==='long'?'complete':'harvest')+'!')+(pc&&pc.st==='behind'?' · <span style="color:var(--warn)">behind pace</span>':'')+'</span></button>'};
+  const n=nextMs(g),pc=pace(g);return '<button class="fcard" data-action="open-goal" data-id="'+g.id+'"><span class="k">'+(hz==='long'?'Build':'Crop')+' · next step</span><span class="t">'+esc(g.title)+'</span>'+barHtml(progress(g))+'<span class="n">'+(n?'Next: '+esc(n.text)+(n.due?' · '+whenText(n.due):''):'Ready to '+(hz==='long'?'complete':'harvest')+'!')+(pc&&pc.st==='behind'?' · <span style="color:var(--warn)">behind pace</span>':'')+'</span></button>'};
   $('focus').innerHTML=card(focus(vid,'short'),'short')+card(focus(vid,'long'),'long')}
 
 function renderGoals(){const vid=APPINFO[APP].vid;const act=state.goals.filter(g=>g.villagerId===vid&&isActive(g)),qd=queueOf(vid);
@@ -874,7 +979,7 @@ function renderHub(){const L=levelInfo();$('hubSub').textContent='Lv '+L.n+' · 
 
 function renderAll(){renderSync();if(MODE==='widget'){renderWidget();return}
   if(!APP){renderHub();return}
-  renderHeader();renderNote();renderToday();renderFocus();renderGoals();renderSpecial();renderRewards();renderProgress();renderNews();if($('mapDlg').open)mapTiles($('mapGrid'),APP);if($('goalDlg').open&&sel)renderGoalDlg()}
+  renderHeader();renderNote();renderHomeToday();renderToday();renderFocus();renderGoals();renderSpecial();renderRewards();renderProgress();renderNews();if($('mapDlg').open)mapTiles($('mapGrid'),APP);if($('goalDlg').open&&sel)renderGoalDlg()}
 
 /* goal dialog */
 function renderGoalDlg(){const g=state.goals.find(x=>x.id===sel);if(!g){$('goalDlg').close();return}
@@ -926,6 +1031,10 @@ document.addEventListener('click',e=>{const a=e.target.closest('[data-action]');
   switch(act){
     case'habit':{const f=findHabit(a.dataset.id);if(!f)return;setHabit(f.h,a.checked);if(a.checked)cheer(f.v.id);checkBadges();save();renderAll();break}
     case'ms':{const gg=state.goals.find(x=>x.id===a.dataset.g),m=gg&&gg.milestones.find(x=>x.id===a.dataset.id);if(!m)return;setMilestone(gg,m,a.checked);checkBadges();save();renderAll();break}
+    case'note-more':noteOpen=!noteOpen;renderNote();break;
+    case'timer':{const f=findHabit(a.dataset.id);if(!f)return;if(TIMERS[a.dataset.id]&&TIMERS[a.dataset.id]>Date.now())delete TIMERS[a.dataset.id];else TIMERS[a.dataset.id]=Date.now()+timerMins(f.h)*60000;saveTimers();renderAll();break}
+    case'sky-locate':if(!navigator.geolocation){$('skyInfo').textContent='This device can&#39;t share its location, so the sky uses your time zone.';break}$('skyInfo').textContent='Finding your location…';
+      navigator.geolocation.getCurrentPosition(pos=>{try{localStorage.setItem('hf-sky',JSON.stringify({lat:Math.round(pos.coords.latitude*10)/10,lng:Math.round(pos.coords.longitude*10)/10}))}catch(e){}SUN.day='';skyInfo()},()=>{$('skyInfo').textContent='Couldn&#39;t get your location, so the sky still uses your time zone.'},{timeout:15000});break;
     case'open-goal':openGoal(a.dataset.id);break;
     case'new-goal':openEdit(null,a.dataset.hz);break;
     case'edit-goal':if(g)openEdit(g);break;
@@ -950,7 +1059,7 @@ document.addEventListener('click',e=>{const a=e.target.closest('[data-action]');
     case'del-book':state.books=state.books.filter(x=>x.id!==a.dataset.id);save();renderAll();break;
     case'open-map':mapTiles($('mapGrid'),APP);$('mapDlg').showModal();break;
     case'go':if(window.hfDesktop&&MODE==='widget'){window.hfDesktop.openMain(a.dataset.app);break}goApp(a.dataset.app);break;
-    case'open-settings':$('sName').value=state.player||'';renderChoreEdit();renderSync();$('setMsg').textContent='';$('setDlg').showModal();break;
+    case'open-settings':skyInfo();$('sName').value=state.player||'';renderChoreEdit();renderSync();$('setMsg').textContent='';$('setDlg').showModal();break;
     case'save-settings':{state.player=$('sName').value.trim();const c=$('sChore').value.trim();if(c&&APP){V().habits.push({id:uid(),text:c,freq:'daily',log:[]});$('sChore').value=''}save();renderChoreEdit();renderAll();$('setMsg').textContent='Saved.';break}
     case'del-standing':{const v=V();v.habits=v.habits.filter(h=>h.id!==a.dataset.id);save();renderChoreEdit();renderAll();break}
     case'freq-standing':{const h=V().habits.find(x=>x.id===a.dataset.id);if(h){h.freq=h.freq==='daily'?'weekly':'daily';save();renderChoreEdit();renderAll()}break}
@@ -981,11 +1090,11 @@ function notify(title,body,a){const icon='icons/'+a+'-192.png';
 
 /* scene interaction + loop */
 function bindScene(){const cv=$('scene');const pt=e=>{const b=cv.getBoundingClientRect();return[(e.clientX-b.left)/b.width*cv.width,(e.clientY-b.top)/b.height*cv.height]};
-  cv.addEventListener('mousemove',e=>{if(!scene)return;const[x,y]=pt(e);scene.hover=scene.hit(x,y);const vid=APPINFO[APP].vid,g=scene.hover&&focus(vid,scene.hover);$('sceneTip').textContent=scene.hover?(g?g.title+' · '+Math.round(progress(g)*100)+'%':'Empty '+(scene.hover==='long'?'build site':'garden bed')+' · tap to plant'):'Tap the garden bed or the build site to open a goal'});
+  cv.addEventListener('mousemove',e=>{if(!scene)return;const[x,y]=pt(e);scene.hover=scene.hit(x,y);const vid=APPINFO[APP].vid,g=scene.hover&&focus(vid,scene.hover);$('sceneTip').textContent=scene.hover?(g?g.title+' · '+Math.round(progress(g)*100)+'%':'Empty '+(scene.hover==='long'?'build site':'garden bed')+' · tap to plant'):'Tap a pin to open a goal'});
   cv.addEventListener('mouseleave',()=>{if(scene)scene.hover=null});
   cv.addEventListener('click',e=>{if(!scene)return;const[x,y]=pt(e),h=scene.hit(x,y);if(!h){scene.cheer=1.2;return}const g=focus(APPINFO[APP].vid,h);if(g)openGoal(g.id);else openEdit(null,h)})}
 let lastFrame=0;
-function loop(now){if(scene&&document.visibilityState==='visible'&&now-lastFrame>30){lastFrame=now;scene.draw(now/1000);const d=new Date();$('clock').textContent=d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'})}requestAnimationFrame(loop)}
+function loop(now){if(scene&&document.visibilityState==='visible'&&now-lastFrame>30){lastFrame=now;scene.draw(now/1000);const d=new Date(),st=sunNow(),hn=d.getHours()+d.getMinutes()/60;$('clock').textContent=d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'})+(st.polar?'':' · '+(hn<st.rise?'sunrise '+clock12(st.rise):hn<st.set?'sunset '+clock12(st.set):'sunrise '+clock12(st.rise)))}requestAnimationFrame(loop)}
 
 /* start */
 window.addEventListener('storage',e=>{if(e.key===KEY&&e.newValue){try{state=migrate(JSON.parse(e.newValue));renderAll()}catch(er){}}if(e.key===SESS){try{session=JSON.parse(e.newValue||'null')}catch(er){}renderSync()}});
@@ -999,7 +1108,7 @@ else{
   if(!APP&&(MODE==='desktop'||window.hfDesktop)){let last='juniper';try{last=localStorage.getItem('hf-last-app')||'juniper'}catch(e){}APP=APPINFO[last]?last:'juniper'}
   bindScene();window.addEventListener('resize',()=>{const m=wantMobile();if(m!==MOB)setLayout()});setLayout();
   if(APP)goApp(APP);else{document.body.classList.add('hub');hubLogo($('hubLogo'));renderAll()}
-  checkBadges();save(false);checkReminders();setInterval(checkReminders,60000);
+  checkBadges();save(false);checkReminders();setInterval(checkReminders,60000);tickTimers();setInterval(tickTimers,1000);
   let lastDay=today();setInterval(()=>{if(today()!==lastDay){lastDay=today();renderAll()}else if(APP)renderNote()},60000);
   requestAnimationFrame(loop)}
 if(session)pull();
