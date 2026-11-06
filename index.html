@@ -1010,15 +1010,17 @@ $('editForm').addEventListener('submit',e=>{const t=$('eTitle').value.trim();if(
 
 /* tabs (phone) */
 let MOB=false,curTab='home';
-function setTab(t){curTab=t;document.querySelectorAll('[data-tab]').forEach(el=>el.classList.toggle('tab-on',el.dataset.tab===t));document.querySelectorAll('[data-tabbtn]').forEach(b=>b.setAttribute('aria-selected',b.dataset.tabbtn===t));window.scrollTo(0,0)}
-document.querySelectorAll('[data-tabbtn]').forEach(b=>b.addEventListener('click',()=>setTab(b.dataset.tabbtn)));
+const TABNAMES=['home','today','special','goals','progress'];
+// how = 'push' adds a Back step on the phone, so Back returns to the previous tab
+function setTab(t,how){if(how==='push'&&t!==curTab&&APP&&canHub()){const u=new URL(location.href);if(t==='home')u.searchParams.delete('tab');else u.searchParams.set('tab',t);history.pushState(null,'',u)}curTab=t;document.querySelectorAll('[data-tab]').forEach(el=>el.classList.toggle('tab-on',el.dataset.tab===t));document.querySelectorAll('[data-tabbtn]').forEach(b=>b.setAttribute('aria-selected',b.dataset.tabbtn===t));window.scrollTo(0,0)}
+document.querySelectorAll('[data-tabbtn]').forEach(b=>b.addEventListener('click',()=>setTab(b.dataset.tabbtn,'push')));
 function wantMobile(){return MODE==='mobile'||(MODE!=='widget'&&MODE!=='desktop'&&Math.min(window.innerWidth,screen.width||9999)<760)}
 function setLayout(){MOB=wantMobile();document.body.classList.toggle('mobile',MOB);if(scene){scene.cv.height=MOB?560:480;scene.big=MOB}setTab(curTab)}
 
 /* switching apps */
 // how = 'push' (from the caretakers screen, so Back returns there), 'none' (already in history) or replace
 function goApp(a,how){if(!APPINFO[a])return;APP=a;try{localStorage.setItem('hf-last-app',a)}catch(e){}
-  const u=new URL(location.href);u.searchParams.set('app',a);if(how==='push')history.pushState(null,'',u);else if(how!=='none')history.replaceState(null,'',u);
+  const u=new URL(location.href);u.searchParams.set('app',a);if(how!=='none')u.searchParams.delete('tab');if(how==='push')history.pushState(null,'',u);else if(how!=='none')history.replaceState(null,'',u);
   document.body.className=document.body.className.replace(/\bapp-\w+/g,'').replace(/\bhub\b/,'').trim()+' app-'+a;
   $('favLink').href='icons/'+a+'-192.png';
   portrait($('appLogo'),a);portrait($('noteFace'),a);scene=new Scene($('scene'),a);if(MOB){scene.cv.height=560;scene.big=true}sel=null;
@@ -1029,7 +1031,7 @@ const canHub=()=>MODE!=='widget'&&MODE!=='desktop'&&!window.hfDesktop;
 function goHub(){APP=null;scene=null;sel=null;document.querySelectorAll('dialog[open]').forEach(d=>d.close());
   document.body.className=document.body.className.replace(/\bapp-\w+/g,'').trim()+' hub';$('favLink').href='icons/hub-192.png';document.title='Hearthfield';
   hubLogo($('hubLogo'));renderAll();window.scrollTo(0,0)}
-window.addEventListener('popstate',()=>{if(!canHub())return;const a=(new URLSearchParams(location.search).get('app')||'').toLowerCase();if(APPINFO[a])goApp(a,'none');else goHub()});
+window.addEventListener('popstate',()=>{if(!canHub())return;const a=(new URLSearchParams(location.search).get('app')||'').toLowerCase();if(!APPINFO[a]){goHub();return}const t=new URLSearchParams(location.search).get('tab');if(a!==APP)goApp(a,'none');setTab(TABNAMES.includes(t)?t:'home')});
 
 /* events */
 let delArm=null;
