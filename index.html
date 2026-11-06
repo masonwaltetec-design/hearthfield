@@ -83,12 +83,12 @@ textarea{width:100%}
 .scene canvas{display:block;width:100%;aspect-ratio:720/480;cursor:pointer}
 .scene-bar{display:flex;justify-content:space-between;gap:10px;padding:8px 14px;font-size:12.5px;color:var(--muted);flex-wrap:wrap}
 
-.note{display:flex;gap:12px;padding:14px;background:var(--card);color:var(--card-ink);border-radius:16px}
+.note{display:flex;gap:12px;padding:14px;background:var(--panel-2);color:var(--ink);border-radius:16px;border-left:4px solid var(--accent)}
 .note canvas{width:56px;height:56px;border-radius:12px;flex:none}
-.note .who{font-weight:700;font-size:12.5px;letter-spacing:.5px;color:#a8481a}
+.note .who{font-weight:700;font-size:12.5px;letter-spacing:.5px;color:var(--accent)}
 .note p{font-size:14px;line-height:1.5}
 .note p+p{margin-top:6px}
-.note b{color:#0f6b5c}
+.note b{color:var(--accent)}
 
 .list{display:grid;gap:8px;list-style:none;margin:0;padding:0}
 .row{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:9px 12px;background:var(--panel-2);border-radius:12px}
@@ -233,7 +233,9 @@ body.hub .tabbar{display:none!important}
 body.hub .appview{display:none}
 .hubview{display:none}
 body.hub .hubview{display:grid;gap:18px}
-.hubview .intro{display:grid;gap:6px}
+.hubview .wlist li{font-size:14px;padding:10px 12px}
+.hubview .wlist input{width:20px;height:20px}
+.hubview .wtile{padding:10px}
 
 /* widget */
 #widget{display:none}
@@ -263,8 +265,9 @@ body.widget #widget{display:block}
 <section class="hubview">
   <header class="top"><div class="brand"><canvas id="hubLogo" width="96" height="96" aria-hidden="true"></canvas><div><span class="sub">Hearthfield</span><h1>Pick an app</h1></div></div>
     <div class="tools"><button class="pill sync-pill" data-action="open-settings"><span class="dot"></span><span class="syncText">Not syncing</span></button></div></header>
-  <div class="intro panel"><p>Each caretaker has their own app with its own reminders and goals. They share one sign-in, one coin purse and one streak. Open one, then use your browser&#39;s <b>Install app</b> option to put it on your home screen. Do that for each one you want.</p></div>
-  <div class="map" id="hubMap"></div>
+  <p class="muted" id="hubSub">Tap a caretaker to open their app.</p>
+  <div class="wtiles" id="hubTiles"></div>
+  <section class="panel"><div class="panel-head"><h2>Today</h2><span class="label">tap to check off</span></div><ul class="wlist" id="hubList"></ul></section>
 </section>
 
 <!-- ============ APP ============ -->
@@ -859,16 +862,18 @@ function mapTiles(container,cur){container.innerHTML=APPS.map(a=>{const A=APPINF
   return '<button class="isle'+(a===cur?' here':'')+'" data-action="go" data-app="'+a+'"><canvas width="360" height="240" data-isle="'+a+'"></canvas><span class="nm">'+A.name+'</span><span class="rl">'+esc(v.role)+(due?' · '+due+' due':'')+'</span>'+barHtml(((sh?progress(sh):0)+(lg?progress(lg):0))/2)+'</button>'}).join('');
   container.querySelectorAll('canvas[data-isle]').forEach(cv=>{const s=new Scene(cv,cv.dataset.isle,{mini:true});s.draw(performance.now()/1000)})}
 
+function quickTiles(el){el.innerHTML=APPS.map(a=>{const A=APPINFO[a],sh=focus(A.vid,'short'),lg=focus(A.vid,'long'),n=(sh&&nextMs(sh))||(lg&&nextMs(lg));return '<button class="wtile" data-action="open-main" data-app="'+a+'"><canvas width="68" height="68" data-pt="'+a+'"></canvas><span style="min-width:0"><span class="nm">'+A.name+'</span><div class="nx">'+(n?esc(n.text):'All clear')+'</div>'+barHtml(sh?progress(sh):0)+'</span></button>'}).join('');
+  el.querySelectorAll('canvas[data-pt]').forEach(c=>portrait(c,c.dataset.pt))}
+function quickList(el,pre,max){const items=[];state.villagers.forEach(v=>choresFor(v.id).filter(o=>o.h.freq==='daily').forEach(o=>items.push({d:habitDoneNow(o.h),html:'<input type="checkbox" id="'+pre+'h-'+o.h.id+'" data-action="habit" data-id="'+o.h.id+'" '+(habitDoneNow(o.h)?'checked':'')+'><label for="'+pre+'h-'+o.h.id+'">'+esc(o.h.text)+'</label><span class="when">'+esc(v.name)+'</span>'})));
+  dueFor().filter(i=>i.n<=0).forEach(({g,m,n})=>items.push({d:false,html:'<input type="checkbox" id="'+pre+'m-'+m.id+'" data-action="ms" data-g="'+g.id+'" data-id="'+m.id+'"><label for="'+pre+'m-'+m.id+'">'+esc(m.text)+'</label><span class="when '+(n<0?'late':'today')+'">'+whenText(m.due)+'</span>'}));
+  items.sort((a,b)=>a.d-b.d);el.innerHTML=items.length?items.slice(0,max).map(i=>'<li>'+i.html+'</li>').join('')+(items.length>max?'<li style="grid-template-columns:1fr"><span class="when">+'+(items.length-max)+' more</span></li>':''):'<li style="grid-template-columns:1fr"><span class="when">Nothing due today.</span></li>'}
 function renderWidget(){if(MODE!=='widget')return;const L=levelInfo();$('wSub').textContent='Lv '+L.n+' · streak '+streak();
   const ch='<svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true"><path d="M1 7L4 2h6l3 5-3 5H4z" fill="#f6c840"/></svg>';$('wCoins').innerHTML=ch+(state.coins||0);
-  $('wTiles').innerHTML=APPS.map(a=>{const A=APPINFO[a],sh=focus(A.vid,'short'),lg=focus(A.vid,'long'),n=(sh&&nextMs(sh))||(lg&&nextMs(lg));return '<button class="wtile" data-action="open-main" data-app="'+a+'"><canvas width="68" height="68" data-pt="'+a+'"></canvas><span style="min-width:0"><span class="nm">'+A.name+'</span><div class="nx">'+(n?esc(n.text):'All clear')+'</div>'+barHtml(sh?progress(sh):0)+'</span></button>'}).join('');
-  $('wTiles').querySelectorAll('canvas[data-pt]').forEach(c=>portrait(c,c.dataset.pt));
-  const items=[];state.villagers.forEach(v=>choresFor(v.id).filter(o=>o.h.freq==='daily').forEach(o=>items.push({d:habitDoneNow(o.h),html:'<input type="checkbox" id="wh-'+o.h.id+'" data-action="habit" data-id="'+o.h.id+'" '+(habitDoneNow(o.h)?'checked':'')+'><label for="wh-'+o.h.id+'">'+esc(o.h.text)+'</label><span class="when">'+esc(v.name)+'</span>'})));
-  dueFor().filter(i=>i.n<=0).forEach(({g,m,n})=>items.push({d:false,html:'<input type="checkbox" id="wm-'+m.id+'" data-action="ms" data-g="'+g.id+'" data-id="'+m.id+'"><label for="wm-'+m.id+'">'+esc(m.text)+'</label><span class="when '+(n<0?'late':'today')+'">'+whenText(m.due)+'</span>'}));
-  items.sort((a,b)=>a.d-b.d);$('wList').innerHTML=items.length?items.slice(0,4).map(i=>'<li>'+i.html+'</li>').join('')+(items.length>4?'<li style="grid-template-columns:1fr"><span class="when">+'+(items.length-4)+' more</span></li>':''):'<li style="grid-template-columns:1fr"><span class="when">Nothing due today.</span></li>';renderSync()}
+  quickTiles($('wTiles'));quickList($('wList'),'w',4);renderSync()}
+function renderHub(){const L=levelInfo();$('hubSub').textContent='Lv '+L.n+' · streak '+streak()+' · '+(state.coins||0)+' coins · tap a caretaker to open their app';quickTiles($('hubTiles'));quickList($('hubList'),'hb',8)}
 
 function renderAll(){renderSync();if(MODE==='widget'){renderWidget();return}
-  if(!APP){mapTiles($('hubMap'),'');return}
+  if(!APP){renderHub();return}
   renderHeader();renderNote();renderToday();renderFocus();renderGoals();renderSpecial();renderRewards();renderProgress();renderNews();if($('mapDlg').open)mapTiles($('mapGrid'),APP);if($('goalDlg').open&&sel)renderGoalDlg()}
 
 /* goal dialog */
