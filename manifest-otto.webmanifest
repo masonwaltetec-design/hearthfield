@@ -1,0 +1,30 @@
+{
+ "id": "./?app=otto",
+ "name": "Otto",
+ "short_name": "Otto",
+ "description": "Otto looks after your career goals in Hearthfield.",
+ "start_url": "./?app=otto",
+ "scope": "./",
+ "display": "standalone",
+ "orientation": "portrait",
+ "background_color": "#10242b",
+ "theme_color": "#10242b",
+ "icons": [
+  {
+   "src": "icons/otto-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "icons/otto-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  },
+  {
+   "src": "icons/otto-maskable.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ]
+}
