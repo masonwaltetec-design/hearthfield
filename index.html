@@ -239,6 +239,10 @@ body.mobile .g-home,body.mobile .g-two,body.mobile .col{display:contents}
 body:not(.mobile):not(.hub):not(.widget) .tabbar{position:static;display:flex;flex-wrap:wrap;gap:8px;background:none;border:0;padding:0}
 body:not(.mobile) .tab{display:flex;align-items:center;gap:8px;padding:9px 16px;font-size:14px;background:var(--panel)}
 body:not(.mobile) .tab svg{width:18px;height:18px}
+/* PC: the farm matches the height of the note and checklist beside it, so the home tab fits on one screen */
+body:not(.mobile) .g-home{align-items:stretch}
+body:not(.mobile) .scene{display:flex;flex-direction:column}
+body:not(.mobile) .scene canvas{flex:1 1 auto;height:0;min-height:340px;aspect-ratio:auto}
 body:not(.mobile) .tab[aria-selected=true]{background:var(--accent);color:var(--accent-ink)}
 body.mobile .tabbar{display:grid}
 body.mobile .xp{flex:1 1 100%;order:3}
@@ -361,7 +365,7 @@ body.widget #widget{display:block}
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
 <div id="widget"><div class="wcard">
-  <div class="whead"><div><b style="font-size:15px">Hearthfield</b><div style="font-size:12px;color:var(--muted)" id="wSub"></div></div><span style="display:flex;gap:6px;align-items:center"><span class="pill coins" id="wCoins" style="font-size:12px;padding:4px 9px"></span><button class="x" data-action="hide-widget" aria-label="Hide widget" title="Hide widget (turn it back on from the tray icon)">×</button></span></div>
+  <div class="whead"><div><b style="font-size:15px">Hearthfield</b><div style="font-size:12px;color:var(--muted)" id="wSub"></div></div><span style="display:flex;gap:6px;align-items:center"><span class="pill coins" id="wCoins" style="font-size:12px;padding:4px 9px"></span><button class="x" data-action="hide-widget" aria-label="Hide widget" title="Hide the widget until you next open Hearthfield (turn it off for good from the tray icon)">×</button></span></div>
   <div class="wtiles" id="wTiles"></div>
   <ul class="wlist" id="wList"></ul>
   <div class="wfoot"><span id="wSync"></span><button class="btn small primary" data-action="open-main">Open</button></div>
@@ -724,7 +728,7 @@ function paintSky(c,W,H,s,hy){const sc=W/720,day=s.day,glow=s.glow,r=rng(11);
 
 /* ---- scene ---- */
 function Scene(cv,app,opts){this.cv=cv;this.x=cv.getContext('2d');this.app=app;this.opts=opts||{};this.parts=[];this.walkT=0;this.spot=0;this.pos=null;this.hover=null;this.cheer=0}
-Scene.prototype.layout=function(){const W=this.cv.width,H=this.cv.height;this.T=Math.min(W/23.5,H/16.2);this.O=[W/2,H*0.5+this.T*1.9]};
+Scene.prototype.layout=function(){const W=this.cv.width,H=this.cv.height;this.T=Math.min(W/23.5,H/16.9);this.O=[W/2,H*0.5+this.T*1.5]};
 Scene.prototype.iso=function(i,j,k){return[this.O[0]+(i-j)*this.T,this.O[1]+(i+j)*this.T*.5-k*this.T]};
 Scene.prototype.face=function(pts,col){const x=this.x;x.fillStyle=col;x.beginPath();pts.forEach((p,i)=>i?x.lineTo(p[0],p[1]):x.moveTo(p[0],p[1]));x.closePath();x.fill()};
 Scene.prototype.box=function(i,j,k,w,d,h,top,l,r){const p=(a,b,c)=>this.iso(i+a,j+b,k+c);
@@ -1015,7 +1019,10 @@ const TABNAMES=['home','today','special','goals','progress'];
 function setTab(t,how){if(how==='push'&&t!==curTab&&APP&&canHub()){const u=new URL(location.href);if(t==='home')u.searchParams.delete('tab');else u.searchParams.set('tab',t);history.pushState(null,'',u)}curTab=t;document.querySelectorAll('[data-tab]').forEach(el=>el.classList.toggle('tab-on',el.dataset.tab===t));document.querySelectorAll('[data-tabbtn]').forEach(b=>b.setAttribute('aria-selected',b.dataset.tabbtn===t));window.scrollTo(0,0)}
 document.querySelectorAll('[data-tabbtn]').forEach(b=>b.addEventListener('click',()=>setTab(b.dataset.tabbtn,'push')));
 function wantMobile(){return MODE==='mobile'||(MODE!=='widget'&&MODE!=='desktop'&&Math.min(window.innerWidth,screen.width||9999)<760)}
-function setLayout(){MOB=wantMobile();document.body.classList.toggle('mobile',MOB);if(scene){scene.cv.height=MOB?560:480;scene.big=MOB}setTab(curTab)}
+function sizeScene(){if(!scene)return;const cv=scene.cv;if(MOB){if(cv.width!==720||cv.height!==560){cv.width=720;cv.height=560}return}
+  const r=cv.getBoundingClientRect();if(!r.width||!r.height)return;const k=Math.min(window.devicePixelRatio||1,1.5),w=Math.round(r.width*k),h=Math.round(r.height*k);if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h}}
+if(window.ResizeObserver)new ResizeObserver(()=>sizeScene()).observe($('scene'));
+function setLayout(){MOB=wantMobile();document.body.classList.toggle('mobile',MOB);if(scene)scene.big=MOB;setTab(curTab);sizeScene()}
 
 /* switching apps */
 // how = 'push' (from the caretakers screen, so Back returns there), 'none' (already in history) or replace
@@ -1023,8 +1030,8 @@ function goApp(a,how){if(!APPINFO[a])return;APP=a;try{localStorage.setItem('hf-l
   const u=new URL(location.href);u.searchParams.set('app',a);if(how!=='none')u.searchParams.delete('tab');if(how==='push')history.pushState(null,'',u);else if(how!=='none')history.replaceState(null,'',u);
   document.body.className=document.body.className.replace(/\bapp-\w+/g,'').replace(/\bhub\b/,'').trim()+' app-'+a;
   $('favLink').href='icons/'+a+'-192.png';
-  portrait($('appLogo'),a);portrait($('noteFace'),a);scene=new Scene($('scene'),a);if(MOB){scene.cv.height=560;scene.big=true}sel=null;
-  if($('mapDlg').open)$('mapDlg').close();renderAll();setTab('home')}
+  portrait($('appLogo'),a);portrait($('noteFace'),a);scene=new Scene($('scene'),a);scene.big=MOB;sel=null;
+  if($('mapDlg').open)$('mapDlg').close();renderAll();setTab('home');requestAnimationFrame(sizeScene)}
 window.hfSwitch=goApp;
 // back to the caretakers screen (phone and browser only)
 const canHub=()=>MODE!=='widget'&&MODE!=='desktop'&&!window.hfDesktop;
