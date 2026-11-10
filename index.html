@@ -654,7 +654,7 @@ window.addEventListener('online',()=>pull());
 /* ======================= jewelry website (gemsandjewelry) ======================= */
 // New pieces, photos and sales put on the website by the calculator tick off Juniper's chores.
 // My Jewelry (Documents\My Jewelry): PC app is a file, phone app is on GitHub Pages.
-const MJ_URL=window.hfDesktop?'file:///C:/Users/malaw/Documents/My%20Jewelry/index.html':'https://masonwaltetec-design.github.io/myjewelry/';
+const MJ_URL=window.hfDesktop?'file:///C:/Users/malaw/Documents/My%20Jewelry/index.html':'https://malawindu-jewelry.github.io/myjewelry/';
 const JW_TASK=/jewel|piece|photo|inventory|collection|new style/i;
 const jwLink=(vid,text)=>vid==='v4'&&JW_TASK.test(text)?'<a class="jwlink" href="'+MJ_URL+'" target="_blank" rel="noopener">My Jewelry ↗</a>':'';
 function madeMilestones(){const gg=state.goals.find(x=>x.villagerId==='v4'&&x.title==='Build my jewelry inventory'&&isActive(x));if(!gg)return;
