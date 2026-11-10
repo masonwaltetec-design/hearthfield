@@ -6,8 +6,8 @@
 <title>Hearthfield</title>
 <meta name="theme-color" content="#1d1a2b">
 <link rel="manifest" id="manifestLink" href="manifest.webmanifest">
-<link rel="icon" id="favLink" type="image/png" href="icons/hub-192.png">
-<link rel="apple-touch-icon" id="touchLink" href="icons/hub-192.png">
+<link rel="icon" id="favLink" type="image/png" href="icons/hearthfield-192.png">
+<link rel="apple-touch-icon" id="touchLink" href="icons/hearthfield-192.png">
 <script>
 (function(){var q=new URLSearchParams(location.search),a=(q.get('app')||'').toLowerCase();
 if(['bram','wren','otto','juniper'].indexOf(a)>=0){document.getElementById('manifestLink').href='manifest-'+a+'.webmanifest';document.getElementById('favLink').href='icons/'+a+'-192.png';document.getElementById('touchLink').href='icons/'+a+'-192.png';document.title=a[0].toUpperCase()+a.slice(1)}})();
@@ -1052,7 +1052,7 @@ window.hfSwitch=goApp;
 // back to the caretakers screen (phone and browser only)
 const canHub=()=>MODE!=='widget'&&MODE!=='desktop'&&!window.hfDesktop;
 function goHub(){APP=null;scene=null;sel=null;document.querySelectorAll('dialog[open]').forEach(d=>d.close());
-  document.body.className=document.body.className.replace(/\bapp-\w+/g,'').trim()+' hub';$('favLink').href='icons/hub-192.png';document.title='Hearthfield';
+  document.body.className=document.body.className.replace(/\bapp-\w+/g,'').trim()+' hub';$('favLink').href='icons/hearthfield-192.png';document.title='Hearthfield';
   hubLogo($('hubLogo'));renderAll();window.scrollTo(0,0)}
 window.addEventListener('popstate',()=>{if(!canHub())return;const a=(new URLSearchParams(location.search).get('app')||'').toLowerCase();if(!APPINFO[a]){goHub();return}const t=new URLSearchParams(location.search).get('tab');if(a!==APP)goApp(a,'none');setTab(TABNAMES.includes(t)?t:'home')});
 
