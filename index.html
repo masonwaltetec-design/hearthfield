@@ -653,27 +653,38 @@ window.addEventListener('online',()=>pull());
 
 /* ======================= jewelry website (gemsandjewelry) ======================= */
 // New pieces, photos and sales put on the website by the calculator tick off Juniper's chores.
-// The calculator is a private PC tool (not on the website), so the link only shows in the PC app.
-const CALC_URL='file:///C:/Users/malaw/Documents/Jewelry%20Calculator/index.html';
+// My Jewelry (Documents\My Jewelry): PC app is a file, phone app is on GitHub Pages.
+const MJ_URL=window.hfDesktop?'file:///C:/Users/malaw/Documents/My%20Jewelry/index.html':'https://masonwaltetec-design.github.io/myjewelry/';
 const JW_TASK=/jewel|piece|photo|inventory|collection|new style/i;
-const jwLink=(vid,text)=>window.hfDesktop&&vid==='v4'&&JW_TASK.test(text)?'<a class="jwlink" href="'+CALC_URL+'" target="_blank" rel="noopener">Calculator ↗</a>':'';
+const jwLink=(vid,text)=>vid==='v4'&&JW_TASK.test(text)?'<a class="jwlink" href="'+MJ_URL+'" target="_blank" rel="noopener">My Jewelry ↗</a>':'';
 function madeMilestones(){const gg=state.goals.find(x=>x.villagerId==='v4'&&x.title==='Build my jewelry inventory'&&isActive(x));if(!gg)return;
   const m4=gg.milestones.find(m=>/Make 4/.test(m.text)),m12=gg.milestones.find(m=>/12 pieces/.test(m.text));
   if(m4&&!m4.done&&state.biz.made>=4)setMilestone(gg,m4,true);if(m12&&!m12.done&&state.biz.made>=12)setMilestone(gg,m12,true)}
+// Reads the My Jewelry inventory (jewelry_calc row, data.v===2). New named pieces, new photos, sales and
+// website posts tick Juniper's chores. The first look only remembers what is already there.
 let jwBusy=false;
 async function jwCheck(){if(!session||MODE==='widget'||jwBusy)return;jwBusy=true;let rows=null;
-  try{rows=await sb('/rest/v1/jewelry_pieces?select=id,photos,status&user_id=eq.'+session.user.id)}catch(e){}finally{jwBusy=false}
-  if(!Array.isArray(rows))return;const b=state.biz,jw=b.jw||(b.jw={pieces:{},sold:[]});let made=0,photos=0,sold=0;
-  rows.forEach(r=>{const n=(r.photos||[]).length,was=jw.pieces[r.id];if(was===undefined)made++;photos+=Math.max(0,n-(was||0));jw.pieces[r.id]=Math.max(n,was||0);
-    if(r.status==='sold'&&!jw.sold.includes(r.id)){jw.sold.push(r.id);sold++}});
-  if(!made&&!photos&&!sold)return;
+  try{rows=await sb('/rest/v1/jewelry_calc?select=data&user_id=eq.'+session.user.id)}catch(e){}finally{jwBusy=false}
+  const d=Array.isArray(rows)&&rows[0]&&rows[0].data;if(!d||d.v!==2||!Array.isArray(d.pieces))return;
+  const b=state.biz,ps=d.pieces.filter(p=>p&&p.id&&String(p.name||'').trim());
+  const onWeb=p=>!!(p.web&&p.web.id&&p.web.published);
+  if(!b.mj){b.mj={pieces:{},sold:[],listed:[]};
+    ps.forEach(p=>{b.mj.pieces[p.id]=(p.photos||[]).length;if(p.status==='sold')b.mj.sold.push(p.id);if(onWeb(p))b.mj.listed.push(p.id)});
+    b.made=Math.max(b.made||0,ps.length);b.listed=Math.max(b.listed||0,b.mj.listed.length);b.sold=Math.max(b.sold||0,b.mj.sold.length);madeMilestones();
+    news('Juniper connected to My Jewelry: '+ps.length+' piece'+(ps.length===1?'':'s')+' in your inventory.');checkBadges();save();renderAll();return}
+  const jw=b.mj;let made=0,photos=0,sold=0,listed=0;
+  ps.forEach(p=>{const n=(p.photos||[]).length,was=jw.pieces[p.id];if(was===undefined)made++;photos+=Math.max(0,n-(was||0));jw.pieces[p.id]=Math.max(n,was||0);
+    if(p.status==='sold'&&!jw.sold.includes(p.id)){jw.sold.push(p.id);sold++}
+    if(onWeb(p)&&!jw.listed.includes(p.id)){jw.listed.push(p.id);listed++}});
+  if(!made&&!photos&&!sold&&!listed)return;
   const chore=re=>{const o=choresFor('v4').find(x=>re.test(x.h.text));if(o&&!habitDoneNow(o.h))setHabit(o.h,true)};
   const add=(k,n)=>{b[k]=(b[k]||0)+n;stamp();bump(today(),n);gainXp(5*n);coins(5*n)};
   const said=[];
-  if(made){add('made',made);add('listed',made);chore(/new jewelry piece|make .*piece/i);madeMilestones();said.push(made===1?'a new piece':made+' new pieces')}
+  if(made){add('made',made);chore(/new jewelry piece|make .*piece/i);madeMilestones();said.push(made===1?'a new piece':made+' new pieces')}
   if(photos){chore(/photo/i);said.push(photos===1?'a new photo':photos+' new photos')}
+  if(listed){add('listed',listed);said.push(listed===1?'a piece posted to the website':listed+' pieces posted')}
   if(sold){add('sold',sold);said.push(sold===1?'a sale':sold+' sales')}
-  news('Juniper spotted '+said.join(', ')+' on the jewelry website.');toast('Jewelry website',said.join(', ')+' · chores ticked off');cheer('v4');checkBadges();save();renderAll()}
+  news('Juniper spotted '+said.join(', ')+' in My Jewelry.');toast('My Jewelry',said.join(', ')+' · chores ticked off');cheer('v4');checkBadges();save();renderAll()}
 
 /* ======================= low-poly drawing ======================= */
 function shade(hex,a){let n=parseInt(hex.slice(1),16),r=n>>16,g=n>>8&255,b=n&255;const t=a<0?0:255,p=Math.abs(a);return'rgb('+Math.round(r+(t-r)*p)+','+Math.round(g+(t-g)*p)+','+Math.round(b+(t-b)*p)+')'}
