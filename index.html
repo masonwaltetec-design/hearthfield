@@ -240,9 +240,12 @@ body:not(.mobile):not(.hub):not(.widget) .tabbar{position:static;display:flex;fl
 body:not(.mobile) .tab{display:flex;align-items:center;gap:8px;padding:9px 16px;font-size:14px;background:var(--panel)}
 body:not(.mobile) .tab svg{width:18px;height:18px}
 /* PC: the farm matches the height of the note and checklist beside it, so the home tab fits on one screen */
+body:not(.mobile):not(.hub){padding-bottom:16px}
+body:not(.mobile) .note{padding:12px}
 body:not(.mobile) .g-home{align-items:stretch}
 body:not(.mobile) .scene{display:flex;flex-direction:column}
-body:not(.mobile) .scene canvas{flex:1 1 auto;height:0;min-height:340px;aspect-ratio:auto}
+body:not(.mobile) .scene canvas{flex:1 1 auto;height:0;min-height:200px;aspect-ratio:auto}
+body:not(.mobile) .g-home .col{min-height:0;overflow:auto;align-content:start}
 body:not(.mobile) .tab[aria-selected=true]{background:var(--accent);color:var(--accent-ink)}
 body.mobile .tabbar{display:grid}
 body.mobile .xp{flex:1 1 100%;order:3}
@@ -815,28 +818,37 @@ Scene.prototype.draw=function(t){const main=this.cv.getContext('2d'),W=this.cv.w
   const sh=focus(A.vid,'short'),lg=focus(A.vid,'long');const ss=stageOf(sh),ls=stageOf(lg);
   const dry=!!(sh&&choresFor(A.vid).some(o=>o.h.freq==='daily')&&!choresFor(A.vid).some(o=>o.h.freq==='daily'&&habitDoneNow(o.h)));
   this.ground();
+  // the dotted hover outline is painted on the ground, so the caretaker, trees and buildings stand on top of it
+  if(this.hover&&!this.opts.mini){x.strokeStyle='rgba(233,243,240,.8)';x.lineWidth=2;x.setLineDash([6,5]);const b=this.hover==='short'?[-4.4,1.1,3.6,2.6]:[.8,-4.7,4,3.8];const p=[this.iso(b[0],b[1],0),this.iso(b[0]+b[2],b[1],0),this.iso(b[0]+b[2],b[1]+b[3],0),this.iso(b[0],b[1]+b[3],0)];x.beginPath();p.forEach((q,n)=>n?x.lineTo(q[0],q[1]):x.moveTo(q[0],q[1]));x.closePath();x.stroke();x.setLineDash([])}
   (BUILD[A.home]||BUILD.shop)(this,Math.max(ls,0),t);
   if(ls<0){const c=this.iso(2.7,-2.9,0);x.strokeStyle='rgba(233,243,240,.5)';x.lineWidth=2;x.setLineDash([5,4]);x.beginPath();x.moveTo(c[0]-this.T*1.6,c[1]);x.lineTo(c[0],c[1]-this.T*.8);x.lineTo(c[0]+this.T*1.6,c[1]);x.lineTo(c[0],c[1]+this.T*.8);x.closePath();x.stroke();x.setLineDash([])}
   else if(ls===0){[[1,-4.4],[4.2,-4.4],[1,-1.6],[4.2,-1.6]].forEach(([i,j])=>this.box(i,j,0,.12,.12,.8,'#c9a876','#a8865a','#8a6a44'))}
   HOME[A.home](this);
-  this.bed(ss,dry,app,t);
-  // extras
+  // the caretaker walks the stone path between the garden bed, the middle and the build site.
+  // Its position is a spot on the island (i,j), so it stays put on the ground when the farm is resized.
+  const NODES=[[-1.4,4.0],[0,2.6],[0,0],[2.7,0],[2.7,-1.1]],stops=[];if(sh)stops.push(0);if(lg)stops.push(4);stops.push(1);
+  if(!this.w){this.w={n:stops[0],goal:stops[0],p:NODES[stops[0]].slice()};this.spot=0}
+  const w=this.w;if(!stops.includes(w.goal))w.goal=1;
+  this.walkT-=1/60;if(this.walkT<=0){this.spot=(this.spot+1)%stops.length;w.goal=stops[this.spot];this.walkT=6+Math.random()*4}
+  let walking=false;{let tp=NODES[w.n],dd=Math.hypot(tp[0]-w.p[0],tp[1]-w.p[1]);
+    if(dd<.02&&w.n!==w.goal){w.n+=w.goal>w.n?1:-1;tp=NODES[w.n];dd=Math.hypot(tp[0]-w.p[0],tp[1]-w.p[1])}
+    if(dd>=.02){const st=Math.min(dd,.045);w.p[0]+=(tp[0]-w.p[0])/dd*st;w.p[1]+=(tp[1]-w.p[1])/dd*st;walking=true}}
+  const ad=w.p[0]+w.p[1],sp=this.iso(w.p[0],w.p[1],0);
+  // draw the bed, the stand and the trees in depth order around the caretaker, so things in front of it cover it
+  const extras=()=>{
   if(app==='juniper'){const n=Math.min(6,state.biz.listed||0);this.box(1.2,1.2,0,2.4,1,.8,'#d08a50','#b06e3a','#965c30');for(let k=0;k<n;k++)this.box(1.35+k*.38,1.4,.8,.25,.25,.2,['#f0c040','#cfd6dc','#e85a8a'][k%3],'#9a7a24','#8a6a20');
     for(let k=0;k<5;k++){const a=1.1+k*.52;this.face([this.iso(a,1,2.2),this.iso(a+.52,1,2.2),this.iso(a+.52,2.4,1.5),this.iso(a,2.4,1.5)],k%2?'#f4ecdc':'#e86a3a')}
     this.box(1.1,2.3,0,.1,.1,1.5,'#8a6a50','#6a5040','#5a4434');this.box(3.5,2.3,0,.1,.1,1.5,'#8a6a50','#6a5040','#5a4434')}
   if(app==='wren'){const n=Math.min(8,state.books.filter(b=>b.status==='done').length);this.box(1.4,1.4,0,2,.8,.7,'#8a5a3a','#6a4428','#5a3820');for(let k=0;k<n;k++)this.box(1.5+k*.23,1.55,.7,.18,.5,.4+((k*7)%3)*.08,['#e86a3a','#5aa84c','#7cb4ff','#f6c840'][k%4],'#555','#444')}
   if(app==='bram'){this.box(1.6,1.4,0,1.6,.5,.15,'#3a3a44','#2a2a32','#1a1a22');[1.6,3.1].forEach(a=>this.box(a,1.3,.15,.12,.7,.7,'#2a2a32','#1a1a22','#101016'));this.box(1.7,1.6,.45,1.4,.1,.08,'#9aa4ac','#7a848c','#6a747c')}
   if(app==='otto'){this.box(1.5,1.4,0,1.8,.9,.9,'#6a747c','#5a646c','#4a545c');this.box(1.7,1.6,.9,.6,.5,.25,'#cfd6dc','#b4bec6','#9aa6ae');this.box(2.5,1.6,.9,.5,.5,.4,'#c8862a','#a86a1e','#8a5418')}
-  // trees go after buildings so their tops are not hidden
-  this.tree(-5,4.5,.9);this.tree(4.6,-1.6,1);this.tree(4.4,4.2,.8,'#5ab87a','#3a9a5a');this.tree(-1.6,4.8,.7);
-  // the animal
-  const spots=[];if(sh)spots.push(this.iso(-2.6,3.9,0));if(lg)spots.push(this.iso(2.7,-1.1,0));spots.push(this.iso(.4,2.6,0));
-  if(!this.pos){this.pos=spots[0].slice();this.target=spots[0]}
-  this.walkT-=1/60;if(this.walkT<=0){this.spot=(this.spot+1)%spots.length;this.target=spots[this.spot];this.walkT=6+Math.random()*4}
-  const tg=this.target||spots[0];const dx=tg[0]-this.pos[0],dy=tg[1]-this.pos[1],dd=Math.hypot(dx,dy);const walking=dd>1;if(walking){const sp=Math.min(dd,this.T*.06);this.pos[0]+=dx/dd*sp;this.pos[1]+=dy/dd*sp}
+  };
+  const L=[[-.2,()=>this.bed(ss,dry,app,t)],[4.1,extras],[-.5,()=>this.tree(-5,4.5,.9)],[3,()=>this.tree(4.6,-1.6,1)],[8.6,()=>this.tree(4.4,4.2,.8,'#5ab87a','#3a9a5a')],[2.8,()=>this.tree(-2.4,5.2,.7)]].sort((p,q)=>p[0]-q[0]);
+  L.forEach(o=>{if(o[0]<=ad)o[1]()});
   this.cheer=Math.max(0,this.cheer-1/60);const hop=this.cheer>0?Math.abs(Math.sin(t*10))*this.T*.35:(walking?Math.abs(Math.sin(t*9))*this.T*.08:Math.sin(t*2)*this.T*.03);
-  animal(x,this.pos[0],this.pos[1]-hop,this.T/26,A.species,v.color?A.color:A.color,(t%4)<.12);
-  if(!walking&&Math.random()<.05)this.parts.push({x:this.pos[0]+(Math.random()-.5)*this.T,y:this.pos[1]-this.T*1.4,vy:-1.2,vx:(Math.random()-.5),l:1,c:Math.random()<.5?'#ffe066':'#bfe6ff'});
+  animal(x,sp[0],sp[1]-hop,this.T/26,A.species,A.color,(t%4)<.12);
+  L.forEach(o=>{if(o[0]>ad)o[1]()});
+  if(!walking&&Math.random()<.05)this.parts.push({x:sp[0]+(Math.random()-.5)*this.T,y:sp[1]-this.T*1.4,vy:-1.2,vx:(Math.random()-.5),l:1,c:Math.random()<.5?'#ffe066':'#bfe6ff'});
   for(let k=this.parts.length-1;k>=0;k--){const p=this.parts[k];p.l-=1/45;p.vy+=.06;p.x+=p.vx;p.y+=p.vy;x.fillStyle=p.c;x.fillRect(p.x,p.y,3,3);if(p.l<=0)this.parts.splice(k,1)}
   // evening and night shade the island; sunrise and sunset warm it
   x.save();x.globalCompositeOperation='source-atop';if(sky.day<1){x.fillStyle='rgba(16,10,44,'+(.42*(1-sky.day)).toFixed(3)+')';x.fillRect(0,0,W,H)}if(sky.glow>0){x.fillStyle='rgba(255,150,90,'+(.12*sky.glow).toFixed(3)+')';x.fillRect(0,0,W,H)}x.restore();
@@ -844,7 +856,7 @@ Scene.prototype.draw=function(t){const main=this.cv.getContext('2d'),W=this.cv.w
   // pins: tap to open a goal; hover shows the label
   if(!this.opts.mini){const ns=sh&&nextMs(sh),nl=lg&&nextMs(lg),late=sh&&ns&&ns.due&&daysUntil(ns.due)<=0,lk=lg?(ls>=3?6.2:4.4):2.4;
     this.pin(-2.6,2.4,1.6,late?'#ff7a66':A.color,sh?'':'+');this.pin(2.7,-2.9,lk,A.color,lg?'':'+');
-    if(this.hover){x.strokeStyle='rgba(233,243,240,.8)';x.lineWidth=2;x.setLineDash([6,5]);const b=this.hover==='short'?[-4.4,1.1,3.6,2.6]:[.8,-4.7,4,3.8];const p=[this.iso(b[0],b[1],0),this.iso(b[0]+b[2],b[1],0),this.iso(b[0]+b[2],b[1]+b[3],0),this.iso(b[0],b[1]+b[3],0)];x.beginPath();p.forEach((q,n)=>n?x.lineTo(q[0],q[1]):x.moveTo(q[0],q[1]));x.closePath();x.stroke();x.setLineDash([])
+    if(this.hover){
       if(this.hover==='short')this.chip(-2.6,2.4,3.9,sh?(ns?ns.text+(ns.due?' · '+whenText(ns.due):''):'Ready to harvest!'):'Empty bed: plant a goal',late?'#ff7a66':null);
       else this.chip(2.7,-2.9,lk+2.3,lg?(nl?Math.round(progress(lg)*100)+'% · '+nl.text:'Build complete!'):'Empty site: start a build',null)}}
 };
@@ -903,7 +915,7 @@ function renderHomeToday(){const vid=APPINFO[APP].vid;const ch=choresFor(vid).so
   const rows=ch.map(({h,g})=>{const d=habitDoneNow(h),st=habitStreak(h);return '<div class="hrow'+(d?' done':'')+'"><input type="checkbox" id="hh-'+h.id+'" data-action="habit" data-id="'+h.id+'" '+(d?'checked':'')+'><div style="min-width:0"><label for="hh-'+h.id+'">'+esc(h.text)+'</label><div class="sub">'+weekStrip(h)+'<span>'+(h.freq==='weekly'?'weekly':st?st+' day streak':'')+'</span></div></div>'+timerBtn(h)+'</div>'})
    .concat(due.map(({g,m,n})=>'<div class="hrow"><input type="checkbox" id="hm-'+m.id+'" data-action="ms" data-g="'+g.id+'" data-id="'+m.id+'"><div style="min-width:0"><label for="hm-'+m.id+'">'+esc(m.text)+'</label><div class="sub"><span class="when '+(n<0?'late':'today')+'">'+whenText(m.due)+'</span><span>'+esc(g.title)+'</span></div></div><span></span></div>'));
   $('homeToday').innerHTML=rows.length?rows.join(''):'<p class="empty">Nothing on today&#39;s list. Add a chore in Settings.</p>';
-  const done=ch.filter(o=>habitDoneNow(o.h)).length;$('homeCount').textContent=done+' of '+(ch.length+due.length)+' done'}
+  requestAnimationFrame(()=>fitHome());const done=ch.filter(o=>habitDoneNow(o.h)).length;$('homeCount').textContent=done+' of '+(ch.length+due.length)+' done'}
 function tickTimers(){const now=Date.now();let fin=false;
   Object.keys(TIMERS).forEach(id=>{if(TIMERS[id]<=now){delete TIMERS[id];const f=findHabit(id);if(f&&!habitDoneNow(f.h)){setHabit(f.h,true);cheer(f.v.id);toast('Time!',f.h.text+' is checked off · +5 coins');try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch(e){}
       if('Notification' in window&&Notification.permission==='granted'&&document.visibilityState!=='visible')notify('Time!',f.h.text+' is done and checked off.',APP||'wren');fin=true}}});
@@ -1016,13 +1028,17 @@ $('editForm').addEventListener('submit',e=>{const t=$('eTitle').value.trim();if(
 let MOB=false,curTab='home';
 const TABNAMES=['home','today','special','goals','progress'];
 // how = 'push' adds a Back step on the phone, so Back returns to the previous tab
-function setTab(t,how){if(how==='push'&&t!==curTab&&APP&&canHub()){const u=new URL(location.href);if(t==='home')u.searchParams.delete('tab');else u.searchParams.set('tab',t);history.pushState(null,'',u)}curTab=t;document.querySelectorAll('[data-tab]').forEach(el=>el.classList.toggle('tab-on',el.dataset.tab===t));document.querySelectorAll('[data-tabbtn]').forEach(b=>b.setAttribute('aria-selected',b.dataset.tabbtn===t));window.scrollTo(0,0)}
+function setTab(t,how){requestAnimationFrame(()=>fitHome());if(how==='push'&&t!==curTab&&APP&&canHub()){const u=new URL(location.href);if(t==='home')u.searchParams.delete('tab');else u.searchParams.set('tab',t);history.pushState(null,'',u)}curTab=t;document.querySelectorAll('[data-tab]').forEach(el=>el.classList.toggle('tab-on',el.dataset.tab===t));document.querySelectorAll('[data-tabbtn]').forEach(b=>b.setAttribute('aria-selected',b.dataset.tabbtn===t));window.scrollTo(0,0)}
 document.querySelectorAll('[data-tabbtn]').forEach(b=>b.addEventListener('click',()=>setTab(b.dataset.tabbtn,'push')));
 function wantMobile(){return MODE==='mobile'||(MODE!=='widget'&&MODE!=='desktop'&&Math.min(window.innerWidth,screen.width||9999)<760)}
 function sizeScene(){if(!scene)return;const cv=scene.cv;if(MOB){if(cv.width!==720||cv.height!==560){cv.width=720;cv.height=560}return}
   const r=cv.getBoundingClientRect();if(!r.width||!r.height)return;const k=Math.min(window.devicePixelRatio||1,1.5),w=Math.round(r.width*k),h=Math.round(r.height*k);if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h}}
+// PC: size the home row so the whole home tab fits in the window without scrolling
+function fitHome(){const g=document.querySelector('.g-home');if(!g)return;if(MOB||document.body.classList.contains('hub')||curTab!=='home'){g.style.height='';return}
+  g.style.height='';const extra=document.documentElement.scrollHeight-window.innerHeight;if(extra>0)g.style.height=Math.max(260,g.offsetHeight-extra-2)+'px';sizeScene()}
+window.addEventListener('resize',()=>fitHome());
 if(window.ResizeObserver)new ResizeObserver(()=>sizeScene()).observe($('scene'));
-function setLayout(){MOB=wantMobile();document.body.classList.toggle('mobile',MOB);if(scene)scene.big=MOB;setTab(curTab);sizeScene()}
+function setLayout(){MOB=wantMobile();document.body.classList.toggle('mobile',MOB);if(scene)scene.big=MOB;setTab(curTab);sizeScene();fitHome()}
 
 /* switching apps */
 // how = 'push' (from the caretakers screen, so Back returns there), 'none' (already in history) or replace
@@ -1031,7 +1047,7 @@ function goApp(a,how){if(!APPINFO[a])return;APP=a;try{localStorage.setItem('hf-l
   document.body.className=document.body.className.replace(/\bapp-\w+/g,'').replace(/\bhub\b/,'').trim()+' app-'+a;
   $('favLink').href='icons/'+a+'-192.png';
   portrait($('appLogo'),a);portrait($('noteFace'),a);scene=new Scene($('scene'),a);scene.big=MOB;sel=null;
-  if($('mapDlg').open)$('mapDlg').close();renderAll();setTab('home');requestAnimationFrame(sizeScene)}
+  if($('mapDlg').open)$('mapDlg').close();renderAll();setTab('home');requestAnimationFrame(fitHome)}
 window.hfSwitch=goApp;
 // back to the caretakers screen (phone and browser only)
 const canHub=()=>MODE!=='widget'&&MODE!=='desktop'&&!window.hfDesktop;
