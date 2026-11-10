@@ -114,6 +114,9 @@ textarea{width:100%}
 .when{font-size:12.5px;white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--muted)}
 .when.late{color:var(--bad)} .when.today{color:var(--warn)}
 .streak{font-size:12px;color:var(--gold);white-space:nowrap}
+.jwlink{font-size:12px;font-weight:600;color:var(--accent);text-decoration:none;white-space:nowrap;margin-right:8px}
+.jwlink:hover{text-decoration:underline}
+.jwwrap{display:flex;align-items:center}
 
 .focus{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 @media (max-width:560px){.focus{grid-template-columns:1fr}}
@@ -623,13 +626,13 @@ async function pull(){if(!session||syncState.busy)return;syncState.busy=true;
   try{if(!await fresh())return;const r=await fetchRemote();
     if(r&&(r.updatedAt||0)>(state.updatedAt||0)){const hadV3=r.packs&&r.packs.v3;applyRemote(r);if(!hadV3){state.updatedAt=Date.now();await push()}}
     else if(!r||(state.updatedAt||0)>(r.updatedAt||0))await push();
-    syncState.at=Date.now();syncSet('Synced','ok')}
+    syncState.at=Date.now();syncSet('Synced','ok');jwCheck()}
   catch(e){syncSet(e.offline?'Offline':'Sync problem','warn',e.offline?'':e.message)}finally{syncState.busy=false}}
 let pushT=null;
 function syncSchedule(){if(!session)return;clearTimeout(pushT);syncSet('Saving…','');pushT=setTimeout(()=>push().catch(e=>syncSet(e.offline?'Offline':'Sync problem','warn',e.offline?'Saved here. It will sync when you are back online.':e.message)),1500)}
 async function firstSync(){const local=JSON.stringify(state),r=await fetchRemote();
   if(r){applyRemote(r);syncState.offer=local;syncState.msg='Loaded your valley from the cloud.'}else{await push();syncState.msg='Your valley is now saved online.'}
-  syncState.at=Date.now();syncSet('Synced','ok')}
+  syncState.at=Date.now();syncSet('Synced','ok');jwCheck()}
 async function auth(kind){const em=$('syEmail').value.trim(),pw=$('syPass').value;if(!em||pw.length<6){syncSet(syncState.text,syncState.cls,'Enter your email and a password of at least 6 characters.');return}
   syncSet('Connecting…','','');
   try{if(kind==='up'){const j=await sb('/auth/v1/signup',{method:'POST',auth:false,body:{email:em,password:pw}});if(j&&j.access_token){setSession(j);await firstSync()}else{syncSet('Not syncing','','Check your email and click the confirmation link, then sign in here.');return}}
@@ -647,6 +650,30 @@ function renderSync(){
 setInterval(()=>{if(document.visibilityState==='visible')pull()},60000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')pull()});
 window.addEventListener('online',()=>pull());
+
+/* ======================= jewelry website (gemsandjewelry) ======================= */
+// New pieces, photos and sales put on the website by the calculator tick off Juniper's chores.
+// The calculator is a private PC tool (not on the website), so the link only shows in the PC app.
+const CALC_URL='file:///C:/Users/malaw/Documents/Jewelry%20Calculator/index.html';
+const JW_TASK=/jewel|piece|photo|inventory|collection|new style/i;
+const jwLink=(vid,text)=>window.hfDesktop&&vid==='v4'&&JW_TASK.test(text)?'<a class="jwlink" href="'+CALC_URL+'" target="_blank" rel="noopener">Calculator ↗</a>':'';
+function madeMilestones(){const gg=state.goals.find(x=>x.villagerId==='v4'&&x.title==='Build my jewelry inventory'&&isActive(x));if(!gg)return;
+  const m4=gg.milestones.find(m=>/Make 4/.test(m.text)),m12=gg.milestones.find(m=>/12 pieces/.test(m.text));
+  if(m4&&!m4.done&&state.biz.made>=4)setMilestone(gg,m4,true);if(m12&&!m12.done&&state.biz.made>=12)setMilestone(gg,m12,true)}
+let jwBusy=false;
+async function jwCheck(){if(!session||MODE==='widget'||jwBusy)return;jwBusy=true;let rows=null;
+  try{rows=await sb('/rest/v1/jewelry_pieces?select=id,photos,status&user_id=eq.'+session.user.id)}catch(e){}finally{jwBusy=false}
+  if(!Array.isArray(rows))return;const b=state.biz,jw=b.jw||(b.jw={pieces:{},sold:[]});let made=0,photos=0,sold=0;
+  rows.forEach(r=>{const n=(r.photos||[]).length,was=jw.pieces[r.id];if(was===undefined)made++;photos+=Math.max(0,n-(was||0));jw.pieces[r.id]=Math.max(n,was||0);
+    if(r.status==='sold'&&!jw.sold.includes(r.id)){jw.sold.push(r.id);sold++}});
+  if(!made&&!photos&&!sold)return;
+  const chore=re=>{const o=choresFor('v4').find(x=>re.test(x.h.text));if(o&&!habitDoneNow(o.h))setHabit(o.h,true)};
+  const add=(k,n)=>{b[k]=(b[k]||0)+n;stamp();bump(today(),n);gainXp(5*n);coins(5*n)};
+  const said=[];
+  if(made){add('made',made);add('listed',made);chore(/new jewelry piece|make .*piece/i);madeMilestones();said.push(made===1?'a new piece':made+' new pieces')}
+  if(photos){chore(/photo/i);said.push(photos===1?'a new photo':photos+' new photos')}
+  if(sold){add('sold',sold);said.push(sold===1?'a sale':sold+' sales')}
+  news('Juniper spotted '+said.join(', ')+' on the jewelry website.');toast('Jewelry website',said.join(', ')+' · chores ticked off');cheer('v4');checkBadges();save();renderAll()}
 
 /* ======================= low-poly drawing ======================= */
 function shade(hex,a){let n=parseInt(hex.slice(1),16),r=n>>16,g=n>>8&255,b=n&255;const t=a<0?0:255,p=Math.abs(a);return'rgb('+Math.round(r+(t-r)*p)+','+Math.round(g+(t-g)*p)+','+Math.round(b+(t-b)*p)+')'}
@@ -895,10 +922,10 @@ function renderNote(){$('noteWho').textContent=APPINFO[APP].name.toUpperCase();c
   $('noteBody').innerHTML=P.slice(0,2).join('')+(P.length>2?'<div'+(noteOpen?'':' hidden')+'>'+P.slice(2).join('')+'</div><button class="linkbtn" data-action="note-more">'+(noteOpen?'Less':'More')+'</button>':'')}
 
 function renderToday(){const vid=APPINFO[APP].vid;const ch=choresFor(vid).sort((a,b)=>(a.h.freq>b.h.freq?1:-1));
-  $('todayList').innerHTML=ch.length?ch.map(({h,g})=>{const d=habitDoneNow(h),st=habitStreak(h);return '<li class="row'+(d?' done':'')+'"><input type="checkbox" id="h-'+h.id+'" data-action="habit" data-id="'+h.id+'" '+(d?'checked':'')+'><label for="h-'+h.id+'">'+esc(h.text)+'<div class="meta">'+(g?esc(g.title):'Standing chore')+(h.freq==='weekly'?' · weekly':'')+'</div></label><span class="streak">'+(st?st+(h.freq==='weekly'?'w':'d'):'')+'</span></li>'}).join(''):'<li class="empty">No chores yet. Add one in Settings or on a goal.</li>';
+  $('todayList').innerHTML=ch.length?ch.map(({h,g})=>{const d=habitDoneNow(h),st=habitStreak(h);return '<li class="row'+(d?' done':'')+'"><input type="checkbox" id="h-'+h.id+'" data-action="habit" data-id="'+h.id+'" '+(d?'checked':'')+'><label for="h-'+h.id+'">'+esc(h.text)+'<div class="meta">'+(g?esc(g.title):'Standing chore')+(h.freq==='weekly'?' · weekly':'')+'</div></label><span class="streak">'+jwLink(vid,h.text)+(st?st+(h.freq==='weekly'?'w':'d'):'')+'</span></li>'}).join(''):'<li class="empty">No chores yet. Add one in Settings or on a goal.</li>';
   $('todayCount').textContent=ch.filter(o=>habitDoneNow(o.h)).length+' of '+ch.length+' done';
   const due=dueFor(vid);
-  $('dueList').innerHTML=due.length?due.map(({g,m,n})=>'<li class="row"><input type="checkbox" id="d-'+m.id+'" data-action="ms" data-g="'+g.id+'" data-id="'+m.id+'"><label for="d-'+m.id+'">'+esc(m.text)+'<div class="meta">'+esc(g.title)+'</div></label><span class="when '+(n<0?'late':n===0?'today':'')+'">'+whenText(m.due)+'</span></li>').join(''):'<li class="empty">Nothing due this week.</li>'}
+  $('dueList').innerHTML=due.length?due.map(({g,m,n})=>'<li class="row"><input type="checkbox" id="d-'+m.id+'" data-action="ms" data-g="'+g.id+'" data-id="'+m.id+'"><label for="d-'+m.id+'">'+esc(m.text)+'<div class="meta">'+esc(g.title)+'</div></label><span class="jwwrap">'+jwLink(vid,m.text)+'<span class="when '+(n<0?'late':n===0?'today':'')+'">'+whenText(m.due)+'</span></span></li>').join(''):'<li class="empty">Nothing due this week.</li>'}
 
 const TMR_RE=/(\d+(?:\.\d+)?)\s*(hours?|hrs?|h|minutes?|mins?|m)\b/i;
 function timerMins(h){const m=TMR_RE.exec(h.text);if(!m)return 0;const n=parseFloat(m[1])*(/^h/i.test(m[2])?60:1);return n>=1&&n<=240?n:0}
@@ -912,8 +939,8 @@ function weekStrip(h){const t=today();
   if(h.freq==='weekly'){const now=weekKey(t);return '<span class="wk" aria-label="Last 7 weeks">'+[...Array(7)].map((_,i)=>{const k=addDays(-(6-i)*7,now);return '<span><i class="'+(h.log.some(x=>weekKey(x)===k)?'on':'')+(i===6?' now':'')+'"></i></span>'}).join('')+'</span>'}
   const dow=(new Date().getDay()+6)%7;return '<span class="wk" aria-label="This week">'+[...Array(7)].map((_,i)=>{const d=addDays(i-dow);return '<span><i class="'+(h.log.includes(d)?'on':'')+(i>dow?' fut':'')+(i===dow?' now':'')+'"></i>'+'MTWTFSS'[i]+'</span>'}).join('')+'</span>'}
 function renderHomeToday(){const vid=APPINFO[APP].vid;const ch=choresFor(vid).sort((a,b)=>(a.h.freq>b.h.freq?1:-1));const due=dueFor(vid).filter(i=>i.n<=0);
-  const rows=ch.map(({h,g})=>{const d=habitDoneNow(h),st=habitStreak(h);return '<div class="hrow'+(d?' done':'')+'"><input type="checkbox" id="hh-'+h.id+'" data-action="habit" data-id="'+h.id+'" '+(d?'checked':'')+'><div style="min-width:0"><label for="hh-'+h.id+'">'+esc(h.text)+'</label><div class="sub">'+weekStrip(h)+'<span>'+(h.freq==='weekly'?'weekly':st?st+' day streak':'')+'</span></div></div>'+timerBtn(h)+'</div>'})
-   .concat(due.map(({g,m,n})=>'<div class="hrow"><input type="checkbox" id="hm-'+m.id+'" data-action="ms" data-g="'+g.id+'" data-id="'+m.id+'"><div style="min-width:0"><label for="hm-'+m.id+'">'+esc(m.text)+'</label><div class="sub"><span class="when '+(n<0?'late':'today')+'">'+whenText(m.due)+'</span><span>'+esc(g.title)+'</span></div></div><span></span></div>'));
+  const rows=ch.map(({h,g})=>{const d=habitDoneNow(h),st=habitStreak(h);return '<div class="hrow'+(d?' done':'')+'"><input type="checkbox" id="hh-'+h.id+'" data-action="habit" data-id="'+h.id+'" '+(d?'checked':'')+'><div style="min-width:0"><label for="hh-'+h.id+'">'+esc(h.text)+'</label><div class="sub">'+weekStrip(h)+'<span>'+(h.freq==='weekly'?'weekly':st?st+' day streak':'')+'</span>'+jwLink(vid,h.text)+'</div></div>'+timerBtn(h)+'</div>'})
+   .concat(due.map(({g,m,n})=>'<div class="hrow"><input type="checkbox" id="hm-'+m.id+'" data-action="ms" data-g="'+g.id+'" data-id="'+m.id+'"><div style="min-width:0"><label for="hm-'+m.id+'">'+esc(m.text)+'</label><div class="sub"><span class="when '+(n<0?'late':'today')+'">'+whenText(m.due)+'</span><span>'+esc(g.title)+'</span>'+jwLink(vid,m.text)+'</div></div><span></span></div>'));
   $('homeToday').innerHTML=rows.length?rows.join(''):'<p class="empty">Nothing on today&#39;s list. Add a chore in Settings.</p>';
   requestAnimationFrame(()=>fitHome());const done=ch.filter(o=>habitDoneNow(o.h)).length;$('homeCount').textContent=done+' of '+(ch.length+due.length)+' done'}
 function tickTimers(){const now=Date.now();let fin=false;
@@ -1081,7 +1108,7 @@ document.addEventListener('click',e=>{const a=e.target.closest('[data-action]');
       coins(-r.cost);state.counters.redeemed++;state.redeemedLog.push({title:r.title,cost:r.cost,date:today(),app:APP});news('You redeemed "'+r.title+'" for '+r.cost+' coins. Enjoy it!');toast('Reward redeemed',r.title);checkBadges();save();renderAll();break}
     case'del-reward':state.rewards=state.rewards.filter(x=>x.id!==a.dataset.id);save();renderAll();break;
     case'biz':{const k=a.dataset.k,d=+a.dataset.d;state.biz[k]=Math.max(0,(state.biz[k]||0)+d);if(d>0){stamp();bump(today(),1);gainXp(5);coins(5);cheer('v4')}else{bump(today(),-1);gainXp(-5);coins(-5)}
-      if(k==='made'){const gg=state.goals.find(x=>x.villagerId==='v4'&&x.title==='Build my jewelry inventory'&&isActive(x));if(gg){const m4=gg.milestones.find(m=>/Make 4/.test(m.text)),m12=gg.milestones.find(m=>/12 pieces/.test(m.text));if(m4&&!m4.done&&state.biz.made>=4)setMilestone(gg,m4,true);if(m12&&!m12.done&&state.biz.made>=12)setMilestone(gg,m12,true)}}
+      if(k==='made')madeMilestones();
       checkBadges();save();renderAll();break}
     case'fund':{const sv=parseFloat($('fundSaved').value),tg=parseFloat($('fundTarget').value);state.biz.fundSaved=isFinite(sv)?sv:null;state.biz.fundTarget=isFinite(tg)&&tg>0?tg:null;
       const gg=state.goals.find(x=>x.villagerId==='v4'&&/manufacturing shop/i.test(x.title));if(gg&&state.biz.fundTarget){const pct=(state.biz.fundSaved||0)/state.biz.fundTarget;
